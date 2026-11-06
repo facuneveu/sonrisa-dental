@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Sonrisa Dental</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="auth">
+        <aside class="auth-lado">
+            <a class="marca" asp-area="" asp-controller="Home" asp-action="Index">
+                <span class="marca-icono"><i class="bi bi-emoji-smile"></i></span>
+                <span>Sonrisa Dental<small>Gestión de turnos</small></span>
+            </a>
+            <div>
+                <h2>Cuidar tu sonrisa, <em>sin vueltas</em>.</h2>
+                <p>Sacá, consultá y cancelá tus turnos desde donde estés. Tu historia clínica y tus estudios, siempre a mano.</p>
+            </div>
+            <small class="opacity-75">&copy; @DateTime.Now.Year · Proyecto académico con datos ficticios</small>
+        </aside>
+        <main class="auth-form" role="main">
+            <div class="panel">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

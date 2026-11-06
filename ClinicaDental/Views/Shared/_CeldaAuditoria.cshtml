@@ -1,0 +1,11 @@
+@model AuditableEntity
+@inject NombresUsuarioService Nombres
+
+@* Quién creó y quién modificó por última vez el registro (requisito de auditoría). *@
+<div class="celda-auditoria">
+    <div title="Creado"><i class="bi bi-plus-circle"></i> @(await Nombres.NombreAsync(Model.UsuarioCreacionId)) · @Formato.FechaHora(Model.FechaCreacion)</div>
+    @if (Model.FechaModificacion is { } modificado)
+    {
+        <div title="Última modificación"><i class="bi bi-pencil"></i> @(await Nombres.NombreAsync(Model.UsuarioModificacionId)) · @Formato.FechaHora(modificado)</div>
+    }
+</div>

@@ -1,0 +1,59 @@
+@model IEnumerable<Odontologo>
+
+<table class="table table-hover mb-0">
+    <thead>
+        <tr>
+            <th>Profesional</th>
+            <th>Especialidad</th>
+            <th>Contacto</th>
+            <th>Horarios de atención</th>
+            <th>Estado</th>
+            <th>Auditoría</th>
+            <th class="text-end">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <div class="fw-semibold">@item.Usuario?.NombreCompleto</div>
+                    <div class="small text-muted">@item.Matricula · DNI @item.Usuario?.Dni</div>
+                </td>
+                <td>@item.Especialidad?.Nombre</td>
+                <td class="small">
+                    @item.Usuario?.Email
+                    @if (!string.IsNullOrEmpty(item.Usuario?.PhoneNumber)) { <div class="text-muted">@item.Usuario.PhoneNumber</div> }
+                </td>
+                <td class="small" style="max-width: 260px">@Formato.ResumenHorarios(item.Horarios)</td>
+                <td>
+                    @if (item.Usuario?.Activo == true) { <span class="badge bg-success">Activo</span> }
+                    else { <span class="badge bg-secondary">Inactivo</span> }
+                </td>
+                <td><partial name="_CeldaAuditoria" model="item" /></td>
+                <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-outline-primary me-1" title="Ver su agenda" aria-label="Ver su agenda"
+                       asp-controller="Turnos" asp-action="Index" asp-route-odontologoId="@item.Id">
+                        <i class="bi bi-calendar2-week"></i><span class="texto-accion"> Agenda</span>
+                    </a>
+                    <button class="btn btn-sm btn-outline-primary me-1" title="Horarios de atención" aria-label="Horarios de atención" onclick="abrirHorarios(@item.Id)">
+                        <i class="bi bi-clock"></i><span class="texto-accion"> Horarios</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning me-1" title="Editar" aria-label="Editar"
+                            onclick="Crud.abrir('@Url.Action("ObtenerFormulario", "Odontologos", new { id = item.Id })')">
+                        <i class="bi bi-pencil"></i><span class="texto-accion"> Editar</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar"
+                            data-nombre="@item.Usuario?.NombreCompleto"
+                            onclick="Crud.eliminar(@item.Id, this.dataset.nombre)">
+                        <i class="bi bi-trash"></i><span class="texto-accion"> Eliminar</span>
+                    </button>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr><td colspan="7" class="text-center text-muted py-4">No se encontraron odontólogos.</td></tr>
+        }
+    </tbody>
+</table>

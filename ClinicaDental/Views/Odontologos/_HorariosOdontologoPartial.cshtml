@@ -1,0 +1,66 @@
+@model Odontologo
+@{
+    var dias = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday };
+}
+
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white">Horarios de atención · @Model.Usuario?.NombreCompleto</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<div class="modal-body">
+    @if (!Model.Horarios.Any())
+    {
+        <div class="alert alert-warning py-2">Todavía no tiene horarios cargados, por lo que no se le pueden dar turnos.</div>
+    }
+
+    @foreach (var grupo in Model.Horarios.GroupBy(h => h.DiaSemana).OrderBy(g => Formato.OrdenDia(g.Key)))
+    {
+        <div class="fw-bold small text-uppercase text-muted mt-2 mb-1">@Formato.DiaSemana(grupo.Key)</div>
+        foreach (var h in grupo.OrderBy(x => x.HoraDesde))
+        {
+            <div class="franja">
+                <span><i class="bi bi-clock text-muted"></i> @h.HoraDesde.ToString("HH:mm") a @h.HoraHasta.ToString("HH:mm")</span>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        onclick="eliminarHorario(@h.Id, '@Formato.DiaSemana(h.DiaSemana) de @h.HoraDesde.ToString("HH:mm") a @h.HoraHasta.ToString("HH:mm")')"
+                        aria-label="Quitar franja">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        }
+    }
+
+    <hr class="my-4" />
+
+    <form asp-action="AgregarHorario" asp-controller="Odontologos" method="post" onsubmit="agregarHorario(event)">
+        <div class="fw-bold mb-2">Agregar franja</div>
+        <input type="hidden" name="OdontologoId" value="@Model.Id" />
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="DiaSemana">Día</label>
+                <select id="DiaSemana" name="DiaSemana" class="form-select">
+                    @foreach (var d in dias)
+                    {
+                        <option value="@((int)d)">@Formato.DiaSemana(d)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="HoraDesde">Desde</label>
+                <input id="HoraDesde" name="HoraDesde" type="time" step="900" value="09:00" class="form-control" required />
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label" for="HoraHasta">Hasta</label>
+                <input id="HoraHasta" name="HoraHasta" type="time" step="900" value="13:00" class="form-control" required />
+            </div>
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-success w-100"><i class="bi bi-plus-lg"></i></button>
+            </div>
+        </div>
+        <div class="form-text">Se pueden cargar varias franjas por día (por ejemplo mañana y tarde).</div>
+    </form>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+</div>

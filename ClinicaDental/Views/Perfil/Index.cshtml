@@ -1,0 +1,169 @@
+@model ClinicaDental.Models.ViewModels.PerfilViewModel
+
+@{
+    ViewData["Title"] = "Mi perfil";
+    var obras = ViewBag.ObrasSociales as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>;
+}
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>Mi perfil</h2>
+        <p>Tus datos en la clínica. Podés actualizar tu contacto y cambiar tu contraseña.</p>
+    </div>
+</div>
+
+@if (TempData["Ok"] is string ok)
+{
+    <div class="alert alert-success d-flex align-items-center gap-2" role="status">
+        <i class="bi bi-check-circle-fill"></i> @ok
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span class="avatar avatar-grande" aria-hidden="true">@Model.NombreCompleto[..1].ToUpperInvariant()</span>
+                    <div>
+                        <h5 class="mb-0">@Model.NombreCompleto</h5>
+                        <span class="badge bg-info">@Model.Rol</span>
+                    </div>
+                </div>
+                <dl class="datos-perfil mb-0">
+                    <dt>Correo</dt><dd>@Model.Email</dd>
+                    <dt>DNI</dt><dd>@Model.Dni</dd>
+                    @if (Model.EsPaciente && Model.FechaNacimiento is { } nac)
+                    {
+                        <dt>Fecha de nacimiento</dt><dd>@Formato.Fecha(nac)</dd>
+                    }
+                    @if (Model.EsOdontologo)
+                    {
+                        <dt>Matrícula</dt><dd>@Model.Matricula</dd>
+                        <dt>Especialidad</dt><dd>@Model.Especialidad</dd>
+                    }
+                </dl>
+                <div class="form-text mt-3"><i class="bi bi-info-circle"></i> Tu nombre, DNI y correo los modifica la administración de la clínica, porque identifican tus turnos y tu historia clínica.</div>
+            </div>
+        </div>
+
+        @if (Model.EsPaciente && !string.IsNullOrEmpty(Model.ObraSocial))
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5><i class="bi bi-shield-plus"></i> @Model.ObraSocial</h5>
+                    <p class="mb-0 text-muted">@(Model.CoberturaObraSocial ?? "Consultá la cobertura con tu obra social antes de la consulta.")</p>
+                </div>
+            </div>
+        }
+
+        @if (Model.EsOdontologo)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h5><i class="bi bi-clock"></i> Mis horarios de atención</h5>
+                    @if (!Model.Horarios.Any())
+                    {
+                        <p class="text-muted mb-0">Todavía no tenés horarios cargados. Pedíselos a la administración para que te puedan dar turnos.</p>
+                    }
+                    else
+                    {
+                        foreach (var g in Model.Horarios.GroupBy(h => h.DiaSemana).OrderBy(g => Formato.OrdenDia(g.Key)))
+                        {
+                            <div class="d-flex justify-content-between border-bottom py-1">
+                                <span class="fw-semibold">@Formato.DiaSemana(g.Key)</span>
+                                <span>@string.Join(" · ", g.OrderBy(h => h.HoraDesde).Select(h => $"{h.HoraDesde:HH:mm} a {h.HoraHasta:HH:mm}"))</span>
+                            </div>
+                        }
+                        <div class="form-text mt-2">Si necesitás cambiarlos, pedíselo a la administración.</div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-person-lines-fill"></i> Datos de contacto</h5>
+                <form asp-action="GuardarDatos" asp-controller="Perfil" method="post">
+                    <div class="form-floating mb-3">
+                        <input asp-for="Datos.Telefono" type="tel" class="form-control" placeholder="Teléfono" />
+                        <label asp-for="Datos.Telefono"></label>
+                        <span asp-validation-for="Datos.Telefono" class="text-danger"></span>
+                    </div>
+
+                    @if (Model.EsPaciente)
+                    {
+                        <div class="form-floating mb-3">
+                            <input asp-for="Datos.Direccion" class="form-control" placeholder="Dirección" />
+                            <label asp-for="Datos.Direccion"></label>
+                            <span asp-validation-for="Datos.Direccion" class="text-danger"></span>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-7">
+                                <div class="form-floating mb-3">
+                                    <select asp-for="Datos.ObraSocialId" asp-items="obras" class="form-select">
+                                        <option value="">Particular (sin obra social)</option>
+                                    </select>
+                                    <label asp-for="Datos.ObraSocialId"></label>
+                                    <span asp-validation-for="Datos.ObraSocialId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="Datos.NumeroAfiliado" class="form-control" placeholder="Nº de afiliado" />
+                                    <label asp-for="Datos.NumeroAfiliado"></label>
+                                    <span asp-validation-for="Datos.NumeroAfiliado" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <textarea asp-for="Datos.Alergias" class="form-control" placeholder="Alergias" style="height: 90px"></textarea>
+                            <label asp-for="Datos.Alergias"></label>
+                            <span asp-validation-for="Datos.Alergias" class="text-danger"></span>
+                            <div class="form-text">Tu odontólogo lo ve al atenderte. Avisá si tomás medicación o tenés alguna alergia.</div>
+                        </div>
+                    }
+
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar datos</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3"><i class="bi bi-key"></i> Cambiar contraseña</h5>
+                <form asp-action="CambiarClave" asp-controller="Perfil" method="post">
+                    <div class="form-floating mb-3">
+                        <input asp-for="Clave.ClaveActual" class="form-control" autocomplete="current-password" placeholder="Contraseña actual" />
+                        <label asp-for="Clave.ClaveActual"></label>
+                        <span asp-validation-for="Clave.ClaveActual" class="text-danger"></span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-2">
+                                <input asp-for="Clave.ClaveNueva" class="form-control" autocomplete="new-password" placeholder="Contraseña nueva" />
+                                <label asp-for="Clave.ClaveNueva"></label>
+                                <span asp-validation-for="Clave.ClaveNueva" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-2">
+                                <input asp-for="Clave.ConfirmarClave" class="form-control" autocomplete="new-password" placeholder="Repetir contraseña nueva" />
+                                <label asp-for="Clave.ConfirmarClave"></label>
+                                <span asp-validation-for="Clave.ConfirmarClave" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-text mb-3">Mínimo 6 caracteres, con al menos un número.</div>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Cambiar contraseña</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

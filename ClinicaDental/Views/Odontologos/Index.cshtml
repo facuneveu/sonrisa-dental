@@ -1,0 +1,118 @@
+@model IEnumerable<Odontologo>
+
+@{
+    ViewData["Title"] = "Odontólogos";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>Odontólogos</h2>
+        <p>Profesionales de la clínica, con su especialidad y sus horarios de atención.</p>
+    </div>
+    <button type="button" class="btn btn-primary"
+            onclick="Crud.abrir('@Url.Action("ObtenerFormulario", "Odontologos", new { id = 0 })')">
+        <i class="bi bi-plus-lg"></i> Nuevo odontólogo
+    </button>
+</div>
+
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input id="filtroTexto" type="search" class="form-control" placeholder="Buscar por nombre, matrícula o correo..." aria-label="Buscar odontólogo" />
+    </div>
+    <div class="col-md-4">
+        <select id="filtroEspecialidad" class="form-select" aria-label="Filtrar por especialidad">
+            <option value="">Todas las especialidades</option>
+            @foreach (var e in (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Especialidades)
+            {
+                <option value="@e.Value">@e.Text</option>
+            }
+        </select>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0" id="contenedorTabla">
+        <partial name="_TablaOdontologosPartial" model="Model" />
+    </div>
+</div>
+
+<partial name="_ModalCrud" />
+
+@* Modal aparte para los horarios de atención *@
+<div class="modal fade" id="modalHorarios" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const filtroTexto = document.getElementById('filtroTexto');
+        const filtroEspecialidad = document.getElementById('filtroEspecialidad');
+        Crud.init({
+            modalId: 'modalCrud', tablaId: 'contenedorTabla', entidad: 'odontólogo',
+            eliminarUrl: '@Url.Action("Eliminar", "Odontologos")',
+            listarUrl: () => '@Url.Action("ListarPartial", "Odontologos")?' + new URLSearchParams({ q: filtroTexto.value, especialidadId: filtroEspecialidad.value })
+        });
+        filtroTexto.addEventListener('input', conRetraso(Crud.refrescar));
+        filtroEspecialidad.addEventListener('change', Crud.refrescar);
+
+        // ----- Horarios de atención -----
+        const modalHorarios = new bootstrap.Modal(document.getElementById('modalHorarios'));
+        const contenidoHorarios = document.querySelector('#modalHorarios .modal-content');
+        let odontologoActual = null;
+
+        function cargarHorarios() {
+            return fetch('@Url.Action("Horarios", "Odontologos")?id=' + odontologoActual)
+                .then(r => r.text())
+                .then(html => { contenidoHorarios.innerHTML = html; });
+        }
+
+        function abrirHorarios(id) {
+            odontologoActual = id;
+            cargarHorarios().then(() => modalHorarios.show());
+        }
+
+        function resultadoHorario(data, tituloError) {
+            if (data.success) {
+                cargarHorarios();
+                Crud.refrescar();          // actualiza el resumen de horarios de la tabla
+                Crud.toast.fire({ icon: 'success', title: data.mensaje });
+            } else {
+                Swal.fire(tituloError, data.mensaje, 'error');
+            }
+        }
+
+        function agregarHorario(event) {
+            event.preventDefault();
+            const form = event.target;
+            fetch(form.action, { method: 'POST', body: new FormData(form) })
+                .then(r => r.json())
+                .then(data => resultadoHorario(data, 'No se pudo agregar'));
+        }
+
+        function eliminarHorario(id, descripcion) {
+            Swal.fire({
+                title: '¿Quitar esta franja?',
+                text: descripcion,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#b53a3a',
+                cancelButtonColor: '#51696f',
+                confirmButtonText: 'Sí, quitar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (!result.isConfirmed) return;
+                const fd = new FormData();
+                fd.append('id', id);
+                fd.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+                fetch('@Url.Action("EliminarHorario", "Odontologos")', { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(data => resultadoHorario(data, 'No se pudo quitar'));
+            });
+        }
+    </script>
+}

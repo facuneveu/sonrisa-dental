@@ -1,0 +1,132 @@
+@model IEnumerable<Turno>
+@{
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var esOdontologo = User.IsInRole(Roles.Odontologo) && !esAdmin;
+    var esPaciente = User.IsInRole(Roles.Paciente) && !esAdmin;
+    var ahora = ClinicaDental.Services.Reloj.Ahora;
+    var columnas = 4 + (esPaciente ? 0 : 1) + (esOdontologo ? 0 : 1) + (esAdmin ? 1 : 0);
+}
+
+<table class="table table-hover mb-0">
+    <thead>
+        <tr>
+            <th>Fecha y hora</th>
+            @if (!esPaciente) { <th>Paciente</th> }
+            @if (!esOdontologo) { <th>Odontólogo</th> }
+            <th>Tratamiento</th>
+            <th>Estado</th>
+            @if (esAdmin) { <th>Auditoría</th> }
+            <th class="text-end">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var siguientes = TurnoReglas.Siguientes(item.Estado);
+            var descripcion = $"{Formato.DiaYFecha(item.FechaHora)} a las {item.FechaHora:HH:mm} · {item.Tratamiento?.Nombre}";
+            var pacienteCancela = esPaciente && TurnoReglas.PacientePuedeCancelar(item, ahora);
+
+            <tr>
+                <td>
+                    <div class="fw-semibold">@Formato.DiaYFecha(item.FechaHora)</div>
+                    <div class="small text-muted">@item.FechaHora.ToString("HH:mm") a @item.FechaHoraFin.ToString("HH:mm") · @item.DuracionMinutos min</div>
+                </td>
+                @if (!esPaciente)
+                {
+                    <td>
+                        <div>@item.Paciente?.Usuario?.NombreCompleto</div>
+                        <div class="small text-muted">
+                            @(item.Paciente?.ObraSocial?.Nombre ?? "Particular")
+                            @if (!string.IsNullOrEmpty(item.Paciente?.Usuario?.PhoneNumber)) { <text> · </text><i class="bi bi-telephone"></i> @item.Paciente!.Usuario!.PhoneNumber }
+                        </div>
+                        @if (esOdontologo && !string.IsNullOrEmpty(item.Paciente?.Alergias))
+                        {
+                            <span class="badge bg-warning mt-1"><i class="bi bi-exclamation-triangle"></i> @item.Paciente!.Alergias</span>
+                        }
+                    </td>
+                }
+                @if (!esOdontologo)
+                {
+                    <td>@item.Odontologo?.Usuario?.NombreCompleto</td>
+                }
+                <td>
+                    <div>@item.Tratamiento?.Nombre</div>
+                    @if (!string.IsNullOrEmpty(item.Motivo)) { <div class="small text-muted">@item.Motivo</div> }
+                </td>
+                <td><partial name="_EstadoTurno" model="item.Estado" /></td>
+                @if (esAdmin)
+                {
+                    <td><partial name="_CeldaAuditoria" model="item" /></td>
+                }
+                <td class="text-end text-nowrap">
+                    @if (pacienteCancela)
+                    {
+                        <button class="btn btn-sm btn-outline-danger"
+                                data-descripcion="@descripcion"
+                                onclick="cambiarEstado(@item.Id, 'Cancelado', this.dataset.descripcion)">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+                    }
+                    @if (esAdmin)
+                    {
+                        <button class="btn btn-sm btn-outline-warning me-1" title="Editar turno" aria-label="Editar turno"
+                                onclick="Crud.abrir('@Url.Action("ObtenerFormulario", "Turnos", new { id = item.Id })')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    }
+                    @if ((esAdmin || esOdontologo) && siguientes.Any())
+                    {
+                        <div class="dropdown d-inline-block me-1">
+                            <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" title="Cambiar estado" aria-label="Cambiar estado"
+                                    data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false">
+                                <i class="bi bi-arrow-repeat"></i><span class="texto-accion"> Estado</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @foreach (var s in siguientes)
+                                {
+                                    <li>
+                                        <button type="button" class="dropdown-item"
+                                                data-descripcion="@descripcion"
+                                                onclick="cambiarEstado(@item.Id, '@s', this.dataset.descripcion)">
+                                            <i class="bi @TurnoReglas.Icono(s)"></i> @TurnoReglas.Verbo(s)
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    @if (esAdmin)
+                    {
+                        <button class="btn btn-sm btn-outline-danger" title="Eliminar turno" aria-label="Eliminar turno"
+                                data-nombre="@descripcion"
+                                onclick="Crud.eliminar(@item.Id, this.dataset.nombre)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    }
+                    @if (esPaciente && !pacienteCancela)
+                    {
+                        <span class="text-muted small">—</span>
+                    }
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="@columnas" class="text-center py-5">
+                    <div class="display-6 text-muted mb-2"><i class="bi bi-calendar2-x"></i></div>
+                    <div class="fw-semibold mb-1">No hay turnos para mostrar</div>
+                    <div class="text-muted small mb-3">Puede ser que el período elegido no tenga turnos. Probá ver todos o cambiar los filtros.</div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="elegirPeriodo('todos')">Ver todos los turnos</button>
+                    @if (esPaciente || esAdmin)
+                    {
+                        <button type="button" class="btn btn-sm btn-primary ms-1"
+                                onclick="Crud.abrir('@Url.Action("ObtenerFormulario", "Turnos", new { id = 0 })')">
+                            <i class="bi bi-plus-lg"></i> @(esAdmin ? "Nuevo turno" : "Sacar turno")
+                        </button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,80 @@
+@model IEnumerable<Odontologo>
+
+@{
+    ViewData["Title"] = "Profesionales";
+    var tratamientos = (IEnumerable<Tratamiento>)ViewBag.Tratamientos;
+    var puedeReservar = User.IsInRole(Roles.Paciente) || User.IsInRole(Roles.Administrador);
+}
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>Profesionales</h2>
+        <p>Quiénes atienden en la clínica, en qué días y qué tratamientos realiza cada uno.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    @foreach (var o in Model)
+    {
+        var suyos = tratamientos.Where(t => t.EspecialidadId == o.EspecialidadId).ToList();
+        <div class="col-md-6 col-xl-4">
+            <div class="card profesional-card h-100">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="avatar avatar-grande" aria-hidden="true">@o.Usuario!.Nombre[..1].ToUpperInvariant()</span>
+                        <div>
+                            <h5 class="mb-0">@o.Usuario.Nombre @o.Usuario.Apellido</h5>
+                            <span class="badge bg-info">@o.Especialidad?.Nombre</span>
+                            <div class="small text-muted mt-1">@o.Matricula</div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(o.Presentacion))
+                    {
+                        <p class="text-muted small">@o.Presentacion</p>
+                    }
+
+                    <div class="small fw-bold text-uppercase text-muted mb-1">Atiende</div>
+                    <div class="mb-3">
+                        @foreach (var g in o.Horarios.GroupBy(h => h.DiaSemana).OrderBy(g => Formato.OrdenDia(g.Key)))
+                        {
+                            <div class="d-flex justify-content-between small border-bottom py-1">
+                                <span class="fw-semibold">@Formato.DiaSemana(g.Key)</span>
+                                <span>@string.Join(" · ", g.OrderBy(h => h.HoraDesde).Select(h => $"{h.HoraDesde:HH:mm}–{h.HoraHasta:HH:mm}"))</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="small fw-bold text-uppercase text-muted mb-1">Tratamientos</div>
+                        @foreach (var t in suyos)
+                        {
+                            <div class="d-flex align-items-center justify-content-between gap-2 py-1 border-bottom">
+                                <div>
+                                    <div class="small fw-semibold">@t.Nombre</div>
+                                    <div class="small text-muted">@t.DuracionMinutos min · @Formato.Moneda(t.Precio)</div>
+                                </div>
+                                @if (puedeReservar)
+                                {
+                                    <a class="btn btn-sm btn-outline-primary text-nowrap" asp-controller="Turnos" asp-action="Index"
+                                       asp-route-nuevo="true" asp-route-tratamientoId="@t.Id" asp-route-profesionalId="@o.Id"
+                                       aria-label="Reservar @t.Nombre con @o.Usuario.Nombre @o.Usuario.Apellido">
+                                        <i class="bi bi-calendar-plus"></i> Reservar
+                                    </a>
+                                }
+                            </div>
+                        }
+                        @if (!suyos.Any())
+                        {
+                            <div class="small text-muted">Todavía no hay tratamientos cargados para esta especialidad.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="col-12"><div class="alert alert-info">Por ahora no hay profesionales con horarios cargados.</div></div>
+    }
+</div>

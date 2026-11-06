@@ -1,0 +1,260 @@
+@model IEnumerable<Turno>
+
+@{
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var esOdontologo = User.IsInRole(Roles.Odontologo) && !esAdmin;
+    var esPaciente = User.IsInRole(Roles.Paciente) && !esAdmin;
+    var puedeReservar = esAdmin || esPaciente;
+
+    ViewData["Title"] = esAdmin ? "Turnos" : esOdontologo ? "Mi agenda" : "Mis turnos";
+
+    string estadoInicial = ViewBag.EstadoInicial ?? "";
+    string odontologoInicial = ViewBag.OdontologoInicial?.ToString() ?? "";
+    string urlFormularioInicial = ViewBag.AbrirFormularioUrl ?? "";
+    var pacienteFiltrado = ViewBag.PacienteInicial != null;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>@ViewData["Title"]</h2>
+        <p>
+            @if (esAdmin) { <text>Todos los turnos de la clínica. Podés reservar, reprogramar, cambiar el estado o eliminar.</text> }
+            else if (esOdontologo) { <text>Tus turnos con cada paciente. Marcá el estado a medida que atendés.</text> }
+            else { <text>Tus turnos reservados. Podés sacar uno nuevo o cancelar los que no vayas a usar.</text> }
+        </p>
+    </div>
+    @if (puedeReservar)
+    {
+        <button type="button" class="btn btn-primary"
+                onclick="Crud.abrir('@Url.Action("ObtenerFormulario", "Turnos", new { id = 0 })')">
+            <i class="bi bi-plus-lg"></i> @(esAdmin ? "Nuevo turno" : "Sacar turno")
+        </button>
+    }
+</div>
+
+@* Períodos rápidos: llenan las fechas de abajo con un clic. *@
+<div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Período">
+    <button type="button" class="btn btn-sm btn-outline-primary chip-periodo" data-periodo="proximos">Próximos</button>
+    <button type="button" class="btn btn-sm btn-outline-primary chip-periodo" data-periodo="hoy">Hoy</button>
+    <button type="button" class="btn btn-sm btn-outline-primary chip-periodo" data-periodo="semana">Próximos 7 días</button>
+    <button type="button" class="btn btn-sm btn-outline-primary chip-periodo" data-periodo="historial">Historial</button>
+    <button type="button" class="btn btn-sm btn-outline-primary chip-periodo" data-periodo="todos">Todos</button>
+</div>
+
+@if (pacienteFiltrado)
+{
+    <div id="avisoPaciente" class="alert alert-info py-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span><i class="bi bi-funnel"></i> Mostrando solo los turnos de <strong>@ViewBag.PacienteNombre</strong></span>
+        <button type="button" id="quitarPaciente" class="btn btn-sm btn-outline-secondary">Ver todos los pacientes</button>
+    </div>
+}
+
+<div class="row g-2 mb-3">
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="filtroDesde">Desde</label>
+        <input id="filtroDesde" type="date" class="form-control" value="@ViewBag.DesdeInicial" />
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="filtroHasta">Hasta</label>
+        <input id="filtroHasta" type="date" class="form-control" value="@ViewBag.HastaInicial" />
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="filtroEstado">Estado</label>
+        <select id="filtroEstado" class="form-select">
+            <option value="">Todos</option>
+            @foreach (var e in Enum.GetValues<EstadoTurno>())
+            {
+                <option value="@e" selected="@(e.ToString() == estadoInicial)">@e</option>
+            }
+        </select>
+    </div>
+    @if (esAdmin)
+    {
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1" for="filtroOdontologo">Odontólogo</label>
+            <select id="filtroOdontologo" class="form-select">
+                <option value="">Todos</option>
+                @foreach (var o in (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Odontologos)
+                {
+                    <option value="@o.Value" selected="@(o.Value == odontologoInicial)">@o.Text</option>
+                }
+            </select>
+        </div>
+    }
+    @if (!esPaciente)
+    {
+        <div class="col-12 @(esAdmin ? "col-md-3" : "col-md-6")">
+            <label class="form-label small mb-1" for="filtroTexto">Buscar</label>
+            <input id="filtroTexto" type="search" class="form-control" placeholder="Paciente, odontólogo, tratamiento o motivo..." />
+        </div>
+    }
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0" id="contenedorTabla">
+        <partial name="_TablaTurnosPartial" model="Model" />
+    </div>
+</div>
+
+@if (puedeReservar)
+{
+    <partial name="_ModalCrud" />
+}
+
+@section Scripts {
+    @if (puedeReservar)
+    {
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script>
+        const filtros = {
+            desde: document.getElementById('filtroDesde'),
+            hasta: document.getElementById('filtroHasta'),
+            estado: document.getElementById('filtroEstado'),
+            odontologo: document.getElementById('filtroOdontologo'),   // solo administración
+            texto: document.getElementById('filtroTexto')              // no existe para pacientes
+        };
+        let pacienteFiltrado = '@(ViewBag.PacienteInicial?.ToString() ?? "")';   // solo administración
+
+        Crud.init({
+            modalId: 'modalCrud', tablaId: 'contenedorTabla', entidad: 'turno',
+            eliminarUrl: '@Url.Action("Eliminar", "Turnos")',
+            alAbrir: iniciarFormularioTurno,
+            listarUrl: () => '@Url.Action("ListarPartial", "Turnos")?' + new URLSearchParams({
+                desde: filtros.desde.value,
+                hasta: filtros.hasta.value,
+                estado: filtros.estado.value,
+                odontologoId: filtros.odontologo?.value ?? '',
+                pacienteId: pacienteFiltrado,
+                q: filtros.texto?.value ?? ''
+            })
+        });
+
+        // ----- Períodos rápidos -----
+        // "Hoy" viene del servidor para usar la hora de la clínica y no la del navegador.
+        const HOY = '@ViewBag.Hoy';
+        const sumarDias = (iso, n) => {
+            const d = new Date(iso + 'T12:00:00');
+            d.setDate(d.getDate() + n);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+        const periodos = {
+            proximos: () => [HOY, ''],
+            hoy: () => [HOY, HOY],
+            semana: () => [HOY, sumarDias(HOY, 6)],
+            historial: () => ['', sumarDias(HOY, -1)],
+            todos: () => ['', '']
+        };
+
+        function marcarPeriodo() {
+            document.querySelectorAll('.chip-periodo').forEach(b => {
+                const [d, h] = periodos[b.dataset.periodo]();
+                const activo = d === filtros.desde.value && h === filtros.hasta.value;
+                b.classList.toggle('active', activo);
+                b.setAttribute('aria-pressed', activo);
+            });
+        }
+
+        function elegirPeriodo(nombre) {
+            [filtros.desde.value, filtros.hasta.value] = periodos[nombre]();
+            actualizar();
+        }
+
+        function actualizar() {
+            marcarPeriodo();
+            Crud.refrescar();
+        }
+
+        document.querySelectorAll('.chip-periodo').forEach(b => b.addEventListener('click', () => elegirPeriodo(b.dataset.periodo)));
+        [filtros.desde, filtros.hasta, filtros.estado, filtros.odontologo].forEach(el => el?.addEventListener('change', actualizar));
+        filtros.texto?.addEventListener('input', conRetraso(Crud.refrescar));
+
+        document.getElementById('quitarPaciente')?.addEventListener('click', () => {
+            pacienteFiltrado = '';
+            document.getElementById('avisoPaciente').remove();
+            Crud.refrescar();
+        });
+
+        marcarPeriodo();
+
+        // ----- Cambio de estado (odontólogo, administración y cancelación del paciente) -----
+        function cambiarEstado(id, estado, pregunta) {
+            const ejecutar = () => Crud.enviarAccion('@Url.Action("CambiarEstado", "Turnos")', id, 'No se pudo actualizar el turno', { estado });
+
+            if (estado !== 'Cancelado') { ejecutar(); return; }
+
+            Swal.fire({
+                title: '¿Cancelar el turno?',
+                text: pregunta,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#b53a3a',
+                cancelButtonColor: '#51696f',
+                confirmButtonText: 'Sí, cancelar turno',
+                cancelButtonText: 'Volver'
+            }).then(r => { if (r.isConfirmed) ejecutar(); });
+        }
+
+        // ----- Formulario de reserva: tratamiento -> odontólogo -> fecha -> horarios libres -----
+        function iniciarFormularioTurno(raiz) {
+            const trat = raiz.querySelector('#TratamientoId');
+            if (!trat) return;
+            const odo = raiz.querySelector('#OdontologoId');
+            const fecha = raiz.querySelector('#Fecha');
+            const hora = raiz.querySelector('#Hora');
+            const info = raiz.querySelector('#infoTratamiento');
+            const idTurno = raiz.querySelector('input[name="Id"]').value;
+            const odoInicial = odo.dataset.valor;
+            const horaInicial = hora.dataset.valor;
+
+            const opcion = (texto, valor) => new Option(texto, valor);
+            const sinTratamiento = () => !trat.value || trat.value === '0';
+
+            async function cargarOdontologos(preseleccion) {
+                odo.innerHTML = '';
+                odo.add(opcion('-- Elegí un odontólogo --', '0'));
+                hora.innerHTML = '';
+                hora.add(opcion('-- Elegí un horario --', ''));
+                info.textContent = '';
+                if (sinTratamiento()) return;
+
+                const r = await fetch('@Url.Action("OdontologosPorTratamiento", "Turnos")?tratamientoId=' + trat.value).then(x => x.json());
+                info.textContent = `Duración: ${r.duracion} min · Precio de referencia: ${r.precio}`;
+                r.odontologos.forEach(o => odo.add(opcion(o.nombre, o.id)));
+                if (!r.odontologos.length) info.textContent += ' · Por ahora no hay odontólogos con horarios para este tratamiento.';
+                if (preseleccion && preseleccion !== '0') odo.value = preseleccion;
+                // Si solo hay un odontólogo posible, no hace falta pedirle que lo elija.
+                else if (r.odontologos.length === 1) { odo.value = r.odontologos[0].id; cargarHorarios(); }
+            }
+
+            async function cargarHorarios(preseleccion) {
+                hora.innerHTML = '';
+                if (sinTratamiento() || odo.value === '0' || !fecha.value) {
+                    hora.add(opcion('-- Elegí un horario --', ''));
+                    return;
+                }
+                const params = new URLSearchParams({ odontologoId: odo.value, tratamientoId: trat.value, fecha: fecha.value, turnoId: idTurno });
+                const r = await fetch('@Url.Action("HorariosDisponibles", "Turnos")?' + params).then(x => x.json());
+
+                if (!r.horarios.length) { hora.add(opcion('Sin horarios ese día', '')); return; }
+                hora.add(opcion('-- Elegí un horario --', ''));
+                r.horarios.forEach(h => hora.add(opcion(h, h)));
+                if (preseleccion) hora.value = preseleccion;
+            }
+
+            trat.addEventListener('change', () => cargarOdontologos());
+            odo.addEventListener('change', () => cargarHorarios());
+            fecha.addEventListener('change', () => cargarHorarios());
+
+            // Al editar, al volver el formulario con errores o al llegar desde otra pantalla con datos precargados,
+            // se reconstruyen las listas con lo ya elegido.
+            if (!sinTratamiento()) cargarOdontologos(odoInicial).then(() => cargarHorarios(horaInicial));
+        }
+
+        // Si se llegó desde otra pantalla ("Sacar turno" en un tratamiento o en un profesional), se abre la reserva directamente.
+        const formularioInicial = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(urlFormularioInicial));
+        if (formularioInicial) Crud.abrir(formularioInicial);
+    </script>
+}

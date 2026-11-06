@@ -1,0 +1,75 @@
+@model IEnumerable<LogAuditoria>
+
+@{
+    ViewData["Title"] = "Auditoría";
+}
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>Auditoría</h2>
+        <p>Quién creó, modificó o eliminó cada registro, y cuándo. Se muestran los 300 movimientos más recientes que coinciden con el filtro.</p>
+    </div>
+</div>
+
+<div class="row g-2 mb-3">
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="filtroEntidad">Registro</label>
+        <select id="filtroEntidad" class="form-select">
+            <option value="">Todos</option>
+            @foreach (var e in (IEnumerable<string>)ViewBag.Entidades)
+            {
+                <option value="@e">@e</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="filtroAccion">Acción</label>
+        <select id="filtroAccion" class="form-select">
+            <option value="">Todas</option>
+            <option>@AccionAuditoria.Crear</option>
+            <option>@AccionAuditoria.Modificar</option>
+            <option>@AccionAuditoria.Eliminar</option>
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="filtroDesde">Desde</label>
+        <input id="filtroDesde" type="date" class="form-control" />
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="filtroHasta">Hasta</label>
+        <input id="filtroHasta" type="date" class="form-control" />
+    </div>
+    <div class="col-12 col-md-4">
+        <label class="form-label small mb-1" for="filtroTexto">Buscar</label>
+        <input id="filtroTexto" type="search" class="form-control" placeholder="Usuario o contenido del cambio..." />
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0" id="contenedorTabla">
+        <partial name="_TablaAuditoriaPartial" model="Model" />
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const f = {
+            entidad: document.getElementById('filtroEntidad'), accion: document.getElementById('filtroAccion'),
+            desde: document.getElementById('filtroDesde'), hasta: document.getElementById('filtroHasta'),
+            texto: document.getElementById('filtroTexto')
+        };
+        const contenedor = document.getElementById('contenedorTabla');
+
+        function refrescar() {
+            const params = new URLSearchParams({
+                entidad: f.entidad.value, accion: f.accion.value, desde: f.desde.value, hasta: f.hasta.value, q: f.texto.value
+            });
+            fetch('@Url.Action("ListarPartial", "Auditoria")?' + params)
+                .then(r => r.text())
+                .then(html => { contenedor.innerHTML = html; });
+        }
+
+        [f.entidad, f.accion, f.desde, f.hasta].forEach(el => el.addEventListener('change', refrescar));
+        f.texto.addEventListener('input', conRetraso(refrescar));
+    </script>
+}

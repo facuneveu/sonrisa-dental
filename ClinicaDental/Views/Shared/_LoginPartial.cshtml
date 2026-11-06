@@ -1,0 +1,23 @@
+@using Microsoft.AspNetCore.Identity
+@using ClinicaDental.Models
+@inject SignInManager<Usuario> SignInManager
+@inject UserManager<Usuario> UserManager
+
+@* Pie de la barra lateral: usuario actual y cierre de sesión (solo con sesión iniciada). *@
+@if (SignInManager.IsSignedIn(User))
+{
+    var u = await UserManager.GetUserAsync(User);
+    var rol = User.IsInRole(Roles.Administrador) ? "Administrador" : User.IsInRole(Roles.Odontologo) ? "Odontólogo/a" : "Paciente";
+    var inicial = string.IsNullOrEmpty(u?.Nombre) ? "?" : u!.Nombre[..1].ToUpperInvariant();
+
+    <a class="usuario-chip" asp-area="" asp-controller="Perfil" asp-action="Index" title="Ver mi perfil">
+        <span class="avatar" aria-hidden="true">@inicial</span>
+        <span>
+            <span class="nombre d-block">@u?.Nombre @u?.Apellido</span>
+            <span class="rol">@rol</span>
+        </span>
+    </a>
+    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+        <button type="submit" class="btn-salir"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</button>
+    </form>
+}

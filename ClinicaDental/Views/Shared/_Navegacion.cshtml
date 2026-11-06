@@ -1,0 +1,34 @@
+@{
+    var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
+    string Act(string c) => string.Equals(ctrl, c, StringComparison.OrdinalIgnoreCase) ? "activo" : "";
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var esOdontologo = User.IsInRole(Roles.Odontologo);
+    var esPaciente = User.IsInRole(Roles.Paciente);
+}
+
+<nav aria-label="Navegación principal">
+    <a class="side-link @Act("Home")" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house-door"></i> Inicio</a>
+
+    <a class="side-link @Act("Turnos")" asp-area="" asp-controller="Turnos" asp-action="Index">
+        <i class="bi bi-calendar2-week"></i> @(esAdmin ? "Turnos" : esOdontologo ? "Mi agenda" : "Mis turnos")
+    </a>
+    <a class="side-link @Act("Tratamientos")" asp-area="" asp-controller="Tratamientos" asp-action="Index"><i class="bi bi-clipboard2-pulse"></i> Tratamientos</a>
+    @if (!esAdmin)
+    {
+        @* La administración ya gestiona a los odontólogos desde "Gestión". *@
+        <a class="side-link @Act("Profesionales")" asp-area="" asp-controller="Profesionales" asp-action="Index"><i class="bi bi-person-badge"></i> Profesionales</a>
+    }
+    <a class="side-link @Act("Perfil")" asp-area="" asp-controller="Perfil" asp-action="Index"><i class="bi bi-person-circle"></i> Mi perfil</a>
+
+    @if (esAdmin)
+    {
+        <div class="nav-seccion">Gestión</div>
+        <a class="side-link @Act("Pacientes")" asp-area="" asp-controller="Pacientes" asp-action="Index"><i class="bi bi-people"></i> Pacientes</a>
+        <a class="side-link @Act("Odontologos")" asp-area="" asp-controller="Odontologos" asp-action="Index"><i class="bi bi-person-badge"></i> Odontólogos</a>
+        <a class="side-link @Act("Especialidades")" asp-area="" asp-controller="Especialidades" asp-action="Index"><i class="bi bi-bookmark-star"></i> Especialidades</a>
+        <a class="side-link @Act("ObrasSociales")" asp-area="" asp-controller="ObrasSociales" asp-action="Index"><i class="bi bi-shield-plus"></i> Obras sociales</a>
+
+        <div class="nav-seccion">Administración</div>
+        <a class="side-link @Act("Auditoria")" asp-area="" asp-controller="Auditoria" asp-action="Index"><i class="bi bi-journal-text"></i> Auditoría</a>
+    }
+</nav>

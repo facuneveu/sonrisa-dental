@@ -1,0 +1,94 @@
+@model ClinicaDental.Models.ViewModels.TurnoFormViewModel
+@{
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var hoy = ClinicaDental.Services.Reloj.Hoy.ToString("yyyy-MM-dd");
+}
+
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white">@(Model.Id == 0 ? (esAdmin ? "Nuevo turno" : "Sacar un turno") : "Editar turno")</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<form id="formTurno" asp-action="Guardar" asp-controller="Turnos" method="post" onsubmit="Crud.guardar(event)">
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+
+        @if (esAdmin)
+        {
+            <div class="form-floating mb-3">
+                <select asp-for="PacienteId" asp-items="@((IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Pacientes)" class="form-select" required>
+                    <option value="">-- Seleccioná un paciente --</option>
+                </select>
+                <label asp-for="PacienteId"></label>
+                <span asp-validation-for="PacienteId" class="text-danger"></span>
+            </div>
+        }
+
+        <div class="form-floating mb-1">
+            <select asp-for="TratamientoId" asp-items="@((IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Tratamientos)" class="form-select">
+                <option value="0">-- Seleccioná un tratamiento --</option>
+            </select>
+            <label asp-for="TratamientoId"></label>
+            <span asp-validation-for="TratamientoId" class="text-danger"></span>
+        </div>
+        <div id="infoTratamiento" class="form-text mb-3" aria-live="polite"></div>
+
+        <div class="form-floating mb-3">
+            <select asp-for="OdontologoId" class="form-select" data-valor="@Model.OdontologoId">
+                <option value="0">-- Primero elegí un tratamiento --</option>
+            </select>
+            <label asp-for="OdontologoId"></label>
+            <span asp-validation-for="OdontologoId" class="text-danger"></span>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <input asp-for="Fecha" type="date" value="@Model.Fecha?.ToString("yyyy-MM-dd")" class="form-control" min="@hoy" placeholder="Fecha" />
+                    <label asp-for="Fecha"></label>
+                    <span asp-validation-for="Fecha" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <select asp-for="Hora" class="form-select" data-valor="@Model.Hora?.ToString("HH:mm")">
+                        <option value="">-- Elegí un horario --</option>
+                    </select>
+                    <label asp-for="Hora"></label>
+                    <span asp-validation-for="Hora" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-floating mb-3">
+            <textarea asp-for="Motivo" class="form-control" placeholder="Motivo" style="height: 80px"></textarea>
+            <label asp-for="Motivo"></label>
+            <span asp-validation-for="Motivo" class="text-danger"></span>
+        </div>
+
+        @if (esAdmin)
+        {
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <div class="form-floating mb-2">
+                        <select asp-for="Estado" asp-items="Html.GetEnumSelectList<EstadoTurno>()" class="form-select"></select>
+                        <label asp-for="Estado"></label>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="form-floating mb-2">
+                        <input asp-for="Observaciones" class="form-control" placeholder="Observaciones" />
+                        <label asp-for="Observaciones"></label>
+                        <span asp-validation-for="Observaciones" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> @(Model.Id == 0 ? "Reservar turno" : "Guardar cambios")</button>
+    </div>
+</form>

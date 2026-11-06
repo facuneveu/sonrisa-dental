@@ -1,0 +1,111 @@
+@model ClinicaDental.Models.ViewModels.InicioViewModel
+@{
+    ViewData["Title"] = "Inicio";
+    var esPaciente = User.IsInRole(Roles.Paciente);
+    var esAdmin = User.IsInRole(Roles.Administrador);
+}
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <section class="bienvenida">
+        <div>
+            <h1>Hola, @Model.Nombre</h1>
+            <p>Ingresaste como <strong>@Model.Rol</strong>. Este es el resumen de tu actividad.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            @if (esPaciente)
+            {
+                <a class="btn btn-primary btn-lg" asp-controller="Turnos" asp-action="Index" asp-route-nuevo="true">
+                    <i class="bi bi-calendar-plus"></i> Sacar un turno
+                </a>
+                <a class="btn btn-outline-light btn-lg" asp-controller="Turnos" asp-action="Index">Ver mis turnos</a>
+            }
+            else
+            {
+                <a class="btn btn-primary btn-lg" asp-controller="Turnos" asp-action="Index" asp-route-periodo="hoy">
+                    <i class="bi bi-calendar2-week"></i> @(esAdmin ? "Turnos de hoy" : "Mi agenda de hoy")
+                </a>
+            }
+        </div>
+    </section>
+
+    <div class="row g-3 mt-1">
+        @foreach (var i in Model.Indicadores)
+        {
+            <div class="col-6 col-lg">
+                @* Cada número lleva a la lista de la que sale *@
+                <a class="card indicador accion-card h-100 text-decoration-none d-block" href="@i.Url">
+                    <span class="icono"><i class="bi @i.Icono"></i></span>
+                    <div class="valor">@i.Valor</div>
+                    <div class="etiqueta">@i.Etiqueta <i class="bi bi-arrow-right-short"></i></div>
+                </a>
+            </div>
+        }
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body pb-2 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Próximos turnos</h5>
+            <a asp-controller="Turnos" asp-action="Index" class="small">Ver todos</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha y hora</th>
+                        @if (!esPaciente) { <th>Paciente</th> }
+                        @if (!User.IsInRole(Roles.Odontologo)) { <th>Odontólogo</th> }
+                        <th>Tratamiento</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.ProximosTurnos)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@Formato.DiaYFecha(t.FechaHora) · @t.FechaHora.ToString("HH:mm")</td>
+                            @if (!esPaciente) { <td>@t.Paciente?.Usuario?.NombreCompleto</td> }
+                            @if (!User.IsInRole(Roles.Odontologo)) { <td>@t.Odontologo?.Usuario?.NombreCompleto</td> }
+                            <td>@t.Tratamiento?.Nombre</td>
+                            <td><partial name="_EstadoTurno" model="t.Estado" /></td>
+                        </tr>
+                    }
+                    @if (!Model.ProximosTurnos.Any())
+                    {
+                        <tr><td colspan="5" class="text-center text-muted py-4">No hay turnos próximos.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <section class="hero">
+        <span class="sello"><i class="bi bi-emoji-smile"></i> Clínica odontológica</span>
+        <h1>Tu turno, <em>sin llamadas</em>.</h1>
+        <p>Elegí el tratamiento, el profesional y el horario que mejor te quede. Consultá o cancelá tus turnos cuando quieras.</p>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <a class="btn btn-primary btn-lg" asp-area="Identity" asp-page="/Account/Register">Crear mi cuenta</a>
+            <a class="btn btn-outline-light btn-lg" asp-area="Identity" asp-page="/Account/Login">Ya tengo cuenta</a>
+        </div>
+    </section>
+
+    <div class="pasos">
+        <div class="card paso">
+            <div class="num">01</div>
+            <h5 class="mt-2">Pacientes</h5>
+            <p class="text-muted mb-0">Sacá turnos online, mirá tu historial y cancelá si no podés asistir.</p>
+        </div>
+        <div class="card paso">
+            <div class="num">02</div>
+            <h5 class="mt-2">Odontólogos</h5>
+            <p class="text-muted mb-0">Agenda del día a la vista y seguimiento de cada paciente.</p>
+        </div>
+        <div class="card paso">
+            <div class="num">03</div>
+            <h5 class="mt-2">Administración</h5>
+            <p class="text-muted mb-0">Pacientes, profesionales, tratamientos y un registro de auditoría completo.</p>
+        </div>
+    </div>
+}

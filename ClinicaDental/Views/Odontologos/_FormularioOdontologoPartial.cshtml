@@ -1,0 +1,99 @@
+@model ClinicaDental.Models.ViewModels.OdontologoFormViewModel
+
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white">@(Model.Id == 0 ? "Nuevo odontólogo" : "Editar odontólogo")</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<form id="formOdontologo" asp-action="Guardar" asp-controller="Odontologos" method="post" onsubmit="Crud.guardar(event)">
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row g-2">
+            <div class="col-md-6">
+                <div class="form-floating mb-2">
+                    <input asp-for="Nombre" class="form-control" placeholder="Nombre" />
+                    <label asp-for="Nombre"></label>
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-2">
+                    <input asp-for="Apellido" class="form-control" placeholder="Apellido" />
+                    <label asp-for="Apellido"></label>
+                    <span asp-validation-for="Apellido" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-2">
+                    <input asp-for="Dni" type="number" class="form-control" placeholder="DNI" />
+                    <label asp-for="Dni"></label>
+                    <span asp-validation-for="Dni" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-2">
+                    <input asp-for="Telefono" type="tel" class="form-control" placeholder="Teléfono" />
+                    <label asp-for="Telefono"></label>
+                    <span asp-validation-for="Telefono" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-floating mb-2">
+                    <input asp-for="Email" type="email" class="form-control" placeholder="correo@ejemplo.com" autocomplete="off" />
+                    <label asp-for="Email"></label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-floating mb-2">
+                    <input asp-for="Matricula" class="form-control" placeholder="Matrícula" />
+                    <label asp-for="Matricula"></label>
+                    <span asp-validation-for="Matricula" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="form-floating mb-2">
+                    <select asp-for="EspecialidadId" asp-items="@((IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Especialidades)" class="form-select">
+                        <option value="0">-- Seleccioná una especialidad --</option>
+                    </select>
+                    <label asp-for="EspecialidadId"></label>
+                    <span asp-validation-for="EspecialidadId" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-floating mb-2">
+                    <textarea asp-for="Presentacion" class="form-control" placeholder="Presentación" style="height: 90px"></textarea>
+                    <label asp-for="Presentacion"></label>
+                    <span asp-validation-for="Presentacion" class="text-danger"></span>
+                </div>
+            </div>
+
+            @if (Model.Id == 0)
+            {
+                <div class="col-12">
+                    <div class="form-floating mb-2">
+                        <input asp-for="Password" class="form-control" placeholder="Contraseña" autocomplete="new-password" />
+                        <label asp-for="Password"></label>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-text mb-2">Mínimo 6 caracteres, con al menos un número. El profesional podrá usarla para ingresar.</div>
+                </div>
+            }
+
+            <div class="col-12">
+                <div class="form-check form-switch mt-1">
+                    <input class="form-check-input" type="checkbox" asp-for="Activo" role="switch" />
+                    <label class="form-check-label" asp-for="Activo"></label>
+                    <div class="form-text">Si se desactiva, no puede ingresar ni recibir turnos nuevos.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar</button>
+    </div>
+</form>

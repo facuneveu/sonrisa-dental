@@ -1,0 +1,52 @@
+@model ObraSocial
+
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white">@(Model.Id == 0 ? "Nueva obra social" : "Editar obra social")</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<form id="formObraSocial" asp-action="Guardar" asp-controller="ObrasSociales" method="post" onsubmit="Crud.guardar(event)">
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="form-floating mb-3">
+            <input asp-for="Nombre" class="form-control" placeholder="Nombre" />
+            <label asp-for="Nombre"></label>
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-5">
+                <div class="form-floating mb-3">
+                    <input asp-for="Telefono" type="tel" class="form-control" placeholder="Teléfono" />
+                    <label asp-for="Telefono"></label>
+                    <span asp-validation-for="Telefono" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="form-floating mb-3">
+                    <input asp-for="SitioWeb" class="form-control" placeholder="Sitio web" />
+                    <label asp-for="SitioWeb"></label>
+                    <span asp-validation-for="SitioWeb" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-floating mb-3">
+            <textarea asp-for="Cobertura" class="form-control" placeholder="Cobertura" style="height: 110px"></textarea>
+            <label asp-for="Cobertura"></label>
+            <span asp-validation-for="Cobertura" class="text-danger"></span>
+        </div>
+
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" asp-for="Activa" role="switch" />
+            <label class="form-check-label" asp-for="Activa"></label>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar</button>
+    </div>
+</form>

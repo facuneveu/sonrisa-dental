@@ -1,0 +1,45 @@
+@model IEnumerable<Especialidad>
+
+@{
+    ViewData["Title"] = "Especialidades";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>Especialidades</h2>
+        <p>Áreas de atención de la clínica. Cada tratamiento y cada odontólogo pertenece a una.</p>
+    </div>
+    <button type="button" class="btn btn-primary"
+            onclick="Crud.abrir('@Url.Action("ObtenerFormulario", "Especialidades", new { id = 0 })')">
+        <i class="bi bi-plus-lg"></i> Nueva especialidad
+    </button>
+</div>
+
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input id="filtroTexto" type="search" class="form-control" placeholder="Buscar por nombre o descripción..." aria-label="Buscar especialidad" />
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0" id="contenedorTabla">
+        <partial name="_TablaEspecialidadesPartial" model="Model" />
+    </div>
+</div>
+
+<partial name="_ModalCrud" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const filtroTexto = document.getElementById('filtroTexto');
+        Crud.init({
+            modalId: 'modalCrud', tablaId: 'contenedorTabla', entidad: 'especialidad',
+            eliminarUrl: '@Url.Action("Eliminar", "Especialidades")',
+            listarUrl: () => '@Url.Action("ListarPartial", "Especialidades")?' + new URLSearchParams({ q: filtroTexto.value })
+        });
+        filtroTexto.addEventListener('input', conRetraso(Crud.refrescar));
+    </script>
+}

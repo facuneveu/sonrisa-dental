@@ -1,0 +1,9 @@
+@* Contenedor del modal Bootstrap. El formulario se carga adentro vía AJAX (ver wwwroot/js/crud-async.js). *@
+@{
+    var tamano = ViewData["TamanoModal"] as string ?? "";
+}
+<div class="modal fade" id="modalCrud" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog @tamano modal-dialog-scrollable">
+        <div class="modal-content"></div>
+    </div>
+</div>

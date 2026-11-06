@@ -1,0 +1,66 @@
+@model IEnumerable<Tratamiento>
+
+@{
+    ViewData["Title"] = "Tratamientos";
+    var esAdmin = User.IsInRole(Roles.Administrador);
+}
+
+@Html.AntiForgeryToken()
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>Tratamientos</h2>
+        <p>@(esAdmin ? "Catálogo de prestaciones con su duración y precio." : "Prestaciones disponibles, con su duración y precio de referencia.")</p>
+    </div>
+    @if (esAdmin)
+    {
+        <button type="button" class="btn btn-primary"
+                onclick="Crud.abrir('@Url.Action("ObtenerFormulario", "Tratamientos", new { id = 0 })')">
+            <i class="bi bi-plus-lg"></i> Nuevo tratamiento
+        </button>
+    }
+</div>
+
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input id="filtroTexto" type="search" class="form-control" placeholder="Buscar por nombre o descripción..." aria-label="Buscar tratamiento" />
+    </div>
+    <div class="col-md-4">
+        <select id="filtroEspecialidad" class="form-select" aria-label="Filtrar por especialidad">
+            <option value="">Todas las especialidades</option>
+            @foreach (var e in (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Especialidades)
+            {
+                <option value="@e.Value">@e.Text</option>
+            }
+        </select>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0" id="contenedorTabla">
+        <partial name="_TablaTratamientosPartial" model="Model" />
+    </div>
+</div>
+
+@if (esAdmin)
+{
+    <partial name="_ModalCrud" />
+}
+
+@section Scripts {
+    @if (esAdmin)
+    {
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script>
+        const filtroTexto = document.getElementById('filtroTexto');
+        const filtroEspecialidad = document.getElementById('filtroEspecialidad');
+        Crud.init({
+            modalId: 'modalCrud', tablaId: 'contenedorTabla', entidad: 'tratamiento',
+            eliminarUrl: '@Url.Action("Eliminar", "Tratamientos")',
+            listarUrl: () => '@Url.Action("ListarPartial", "Tratamientos")?' + new URLSearchParams({ q: filtroTexto.value, especialidadId: filtroEspecialidad.value })
+        });
+        filtroTexto.addEventListener('input', conRetraso(Crud.refrescar));
+        filtroEspecialidad.addEventListener('change', Crud.refrescar);
+    </script>
+}

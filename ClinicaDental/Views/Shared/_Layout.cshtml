@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Sonrisa Dental</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="app-shell">
+        <aside class="sidebar fija">
+            <a class="marca" asp-area="" asp-controller="Home" asp-action="Index">
+                <span class="marca-icono"><i class="bi bi-emoji-smile"></i></span>
+                <span>Sonrisa Dental<small>Gestión de turnos</small></span>
+            </a>
+            <partial name="_Navegacion" />
+            <div class="side-pie">
+                <partial name="_LoginPartial" />
+                <div class="side-legal">&copy; @DateTime.Now.Year · Proyecto académico</div>
+            </div>
+        </aside>
+
+        <div class="contenido">
+            <header class="topbar d-lg-none">
+                <a class="marca" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="marca-icono"><i class="bi bi-emoji-smile"></i></span> Sonrisa Dental
+                </a>
+                <button class="btn-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuMovil" aria-controls="menuMovil" aria-label="Abrir menú">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+            </header>
+
+            <main role="main" class="contenido-inner">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <div class="offcanvas offcanvas-start sidebar-oc" tabindex="-1" id="menuMovil" aria-label="Menú">
+        <div class="sidebar">
+            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+            <a class="marca" asp-area="" asp-controller="Home" asp-action="Index">
+                <span class="marca-icono"><i class="bi bi-emoji-smile"></i></span>
+                <span>Sonrisa Dental<small>Gestión de turnos</small></span>
+            </a>
+            <partial name="_Navegacion" />
+            <div class="side-pie">
+                <partial name="_LoginPartial" />
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <header class="topbar">
+        <a class="marca" asp-area="" asp-controller="Home" asp-action="Index">
+            <span class="marca-icono"><i class="bi bi-emoji-smile"></i></span> Sonrisa Dental
+        </a>
+        <div class="topbar-acciones">
+            <a class="btn btn-sm btn-outline-light" asp-area="Identity" asp-page="/Account/Register">Registrarme</a>
+            <a class="btn btn-sm btn-primary" asp-area="Identity" asp-page="/Account/Login">Ingresar</a>
+        </div>
+    </header>
+    <main role="main" class="contenido-inner">
+        @RenderBody()
+    </main>
+    <footer class="footer-simple">
+        &copy; @DateTime.Now.Year · Sonrisa Dental · Proyecto académico con datos ficticios
+    </footer>
+}
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/crud-async.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
