@@ -1,0 +1,35 @@
+@model IEnumerable<ClinicaDental.Models.ViewModels.PacienteDelOdontologo>
+
+@{
+    ViewData["Title"] = "Mis pacientes";
+}
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>Mis pacientes</h2>
+        <p>Las personas que atendés o tenés agendadas. Abrí su ficha para ver la historia clínica, el odontograma y sus archivos.</p>
+    </div>
+</div>
+
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input id="filtroTexto" type="search" class="form-control" placeholder="Buscar por nombre o DNI..." aria-label="Buscar paciente" />
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0" id="contenedorTabla">
+        <partial name="_TablaMisPacientesPartial" model="Model" />
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const filtroTexto = document.getElementById('filtroTexto');
+        Crud.init({
+            tablaId: 'contenedorTabla',
+            listarUrl: () => '@Url.Action("ListarPartial", "Ficha")?' + new URLSearchParams({ q: filtroTexto.value })
+        });
+        filtroTexto.addEventListener('input', conRetraso(Crud.refrescar));
+    </script>
+}

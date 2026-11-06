@@ -20,6 +20,28 @@ namespace ClinicaDental.Services
 
         public string? UsuarioId => _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+        // Regla de acceso a la ficha clínica de un paciente (historia, odontograma y archivos):
+        //   paciente   -> solo la propia
+        //   odontólogo -> solo pacientes con los que tiene (o tuvo) al menos un turno
+        //   administración -> ninguna: gestiona turnos y personas, pero no ve contenido clínico
+        public async Task<bool> PuedeAccederAFichaAsync(int pacienteId)
+        {
+            var usuario = _http.HttpContext?.User;
+            if (usuario == null) return false;
+
+            if (usuario.IsInRole(Models.Roles.Paciente))
+                return pacienteId == await ObtenerPacienteIdAsync();
+
+            if (usuario.IsInRole(Models.Roles.Odontologo))
+            {
+                var odontologoId = await ObtenerOdontologoIdAsync();
+                return odontologoId != null
+                    && await _context.Turnos.AnyAsync(t => t.OdontologoId == odontologoId && t.PacienteId == pacienteId);
+            }
+
+            return false;
+        }
+
         public async Task<int?> ObtenerOdontologoIdAsync()
         {
             if (!_odontologoCargado)

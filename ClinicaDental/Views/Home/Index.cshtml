@@ -29,6 +29,14 @@
         </div>
     </section>
 
+    @if (Model.MensajesSinLeer > 0)
+    {
+        <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 mb-0" role="alert">
+            <span><i class="bi bi-chat-dots-fill"></i> Tenés <strong>@Model.MensajesSinLeer</strong> mensaje@(Model.MensajesSinLeer == 1 ? "" : "s") sin leer de tu odontólogo.</span>
+            <a class="btn btn-sm btn-primary" asp-controller="Mensajes" asp-action="Index">Leer ahora</a>
+        </div>
+    }
+
     <div class="row g-3 mt-1">
         @foreach (var i in Model.Indicadores)
         {

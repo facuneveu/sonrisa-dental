@@ -14,12 +14,14 @@ namespace ClinicaDental.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<Usuario> _userManager;
         private readonly PerfilService _perfil;
+        private readonly MensajesService _mensajes;
 
-        public HomeController(ApplicationDbContext context, UserManager<Usuario> userManager, PerfilService perfil)
+        public HomeController(ApplicationDbContext context, UserManager<Usuario> userManager, PerfilService perfil, MensajesService mensajes)
         {
             _context = context;
             _userManager = userManager;
             _perfil = perfil;
+            _mensajes = mensajes;
         }
 
         public async Task<IActionResult> Index()
@@ -61,10 +63,12 @@ namespace ClinicaDental.Controllers
                 vm.Rol = "Paciente";
                 var id = await _perfil.ObtenerPacienteIdAsync();
                 turnos = turnos.Where(t => t.PacienteId == id);
+                vm.MensajesSinLeer = await _mensajes.NoLeidosAsync();
                 vm.Indicadores = new()
                 {
                     new("Próximos turnos", await turnos.CountAsync(t => t.FechaHora >= ahora && (t.Estado == EstadoTurno.Pendiente || t.Estado == EstadoTurno.Confirmado)), "bi-calendar-check", Url.Action("Index", "Turnos")),
-                    new("Consultas realizadas", await turnos.CountAsync(t => t.Estado == EstadoTurno.Atendido), "bi-check2-circle", Url.Action("Index", "Turnos", new { estado = "Atendido", periodo = "todos" }))
+                    new("Consultas realizadas", await turnos.CountAsync(t => t.Estado == EstadoTurno.Atendido), "bi-check2-circle", Url.Action("Index", "Turnos", new { estado = "Atendido", periodo = "todos" })),
+                    new("Mensajes sin leer", vm.MensajesSinLeer, "bi-chat-dots", Url.Action("Index", "Mensajes"))
                 };
             }
 

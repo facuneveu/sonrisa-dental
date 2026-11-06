@@ -144,7 +144,7 @@ namespace ClinicaDental.Data
             Tu(joaquin, laura, obturacion, EstadoTurno.Cancelado, -6, 2, "Caries en premolar");
 
             Tu(agustina, laura, consulta, EstadoTurno.Confirmado, 0, 1, "Control general");
-            Tu(lucia, laura, obturacion, EstadoTurno.Confirmado, 1, 0, "Caries en molar superior");
+            var tFuturoLucia = Tu(lucia, laura, obturacion, EstadoTurno.Confirmado, 1, 0, "Caries en molar superior");
             Tu(tomas, martin, controlOrto, EstadoTurno.Pendiente, 1, 0, "Control mensual");
             Tu(camila, sebastian, controlNinos, EstadoTurno.Pendiente, 1, 0, "Control anual");
             Tu(joaquin, carolina, reconducto, EstadoTurno.Pendiente, 2, 0, "Molestias en tratamiento anterior");
@@ -169,6 +169,52 @@ namespace ClinicaDental.Data
                     Indicaciones = "Evitar masticar del lado tratado 48 hs. Colocar corona en 30 días."
                 });
 
+            await context.SaveChangesAsync();
+
+            // ---------- Archivos y mensajes de ejemplo ----------
+            var radiografia = ArchivosDeEjemplo.RadiografiaPng();
+            var presupuesto = ArchivosDeEjemplo.PresupuestoPdf("Presupuesto de tratamiento", new[]
+            {
+                "Paciente: Fernandez, Lucia",
+                "Odontologa: Ferreyra, Carolina",
+                "",
+                "1) Tratamiento de conducto, pieza 36 ........ $ 120.000",
+                "2) Corona sobre pieza 36 ..................... $ 180.000",
+                "",
+                "Total estimado: $ 300.000",
+                "Validez del presupuesto: 30 dias.",
+                "Documento ficticio de ejemplo."
+            });
+
+            context.Adjuntos.AddRange(
+                new Adjunto
+                {
+                    PacienteId = lucia.Id, HistoriaClinicaId = t2 == null ? null : (await context.HistoriasClinicas.FirstAsync(h => h.TurnoId == t2.Id)).Id,
+                    Tipo = TipoAdjunto.Radiografia, NombreOriginal = "radiografia-pieza-36.png", TipoContenido = "image/png",
+                    TamanoBytes = radiografia.Length, Contenido = radiografia, Descripcion = "Control previo al tratamiento de conducto"
+                },
+                new Adjunto
+                {
+                    PacienteId = lucia.Id, Tipo = TipoAdjunto.Presupuesto, NombreOriginal = "presupuesto-corona.pdf", TipoContenido = "application/pdf",
+                    TamanoBytes = presupuesto.Length, Contenido = presupuesto, Descripcion = "Presupuesto para la corona de la pieza 36"
+                });
+
+            // Un aviso ya leído y uno sin leer (para ver el contador y el aviso en el inicio de la paciente de prueba).
+            context.Mensajes.AddRange(
+                new Mensaje
+                {
+                    OdontologoId = carolina.Id, PacienteId = lucia.Id, Tipo = TipoMensaje.Indicaciones,
+                    Asunto = "Cuidados después del tratamiento de conducto",
+                    Texto = "Hola Lucía, recordá evitar masticar del lado tratado durante 48 horas y tomar la medicación indicada. Cualquier molestia fuerte, avisame.",
+                    FechaEnvio = Reloj.Ahora.AddDays(-12), FechaLectura = Reloj.Ahora.AddDays(-12).AddHours(2)
+                },
+                new Mensaje
+                {
+                    OdontologoId = laura.Id, PacienteId = lucia.Id, TurnoId = tFuturoLucia?.Id, Tipo = TipoMensaje.Demora,
+                    Asunto = "Demora en tu próximo turno",
+                    Texto = "Hola Lucía, te aviso que ese día voy a estar con una demora de unos 15 minutos. Si preferís, podés llegar un poco más tarde. Disculpá las molestias.",
+                    FechaEnvio = Reloj.Ahora.AddHours(-3)
+                });
 
             PiezaDental Pi(int pieza, EstadoPieza estado, string? obs = null) =>
                 new() { PacienteId = lucia.Id, NumeroPieza = pieza, Estado = estado, Observaciones = obs };

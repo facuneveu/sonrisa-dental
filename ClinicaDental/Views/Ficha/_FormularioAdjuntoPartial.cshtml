@@ -1,0 +1,50 @@
+@model ClinicaDental.Models.ViewModels.AdjuntoFormViewModel
+
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white">Subir archivo</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<form id="formAdjunto" asp-action="GuardarAdjunto" asp-controller="Ficha" method="post" enctype="multipart/form-data" onsubmit="Crud.guardar(event)">
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="PacienteId" />
+
+        <div class="mb-3">
+            <label class="form-label" for="Archivo">Archivo (JPG, PNG, WEBP o PDF, máx. 5 MB)</label>
+            <input type="file" id="Archivo" name="Archivo" class="form-control" data-max-mb="5"
+                   accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf" />
+            <span asp-validation-for="Archivo" class="text-danger"></span>
+            <div id="vistaPrevia" class="mt-2 d-none"><img alt="Vista previa del archivo elegido" class="rounded border" style="max-height:140px;max-width:100%" /></div>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-md-5">
+                <div class="form-floating mb-3">
+                    <select asp-for="Tipo" asp-items="Html.GetEnumSelectList<TipoAdjunto>()" class="form-select"></select>
+                    <label asp-for="Tipo"></label>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="form-floating mb-3">
+                    <select asp-for="HistoriaClinicaId" asp-items="@((IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Consultas)" class="form-select">
+                        <option value="">Sin consulta específica</option>
+                    </select>
+                    <label asp-for="HistoriaClinicaId"></label>
+                    <span asp-validation-for="HistoriaClinicaId" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-floating mb-1">
+            <input asp-for="Descripcion" class="form-control" placeholder="Descripción" />
+            <label asp-for="Descripcion"></label>
+            <span asp-validation-for="Descripcion" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-upload"></i> Subir</button>
+    </div>
+</form>

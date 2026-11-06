@@ -1,0 +1,93 @@
+@model IEnumerable<Mensaje>
+
+@{
+    var esOdontologo = User.IsInRole(Roles.Odontologo);
+    ViewData["Title"] = "Mensajes";
+    var nuevos = ViewBag.Nuevos as HashSet<int> ?? new HashSet<int>();
+}
+
+@Html.AntiForgeryToken()
+
+<div class="encabezado-pagina">
+    <div>
+        <h2>Mensajes</h2>
+        <p>@(esOdontologo ? "Avisos que enviaste a tus pacientes ante demoras, cambios o cancelaciones." : "Avisos de tus odontólogos sobre tus turnos.")</p>
+    </div>
+    @if (esOdontologo)
+    {
+        <button type="button" class="btn btn-primary"
+                onclick="Crud.abrir('@Url.Action("Formulario", "Mensajes")')">
+            <i class="bi bi-chat-dots"></i> Nuevo mensaje
+        </button>
+    }
+</div>
+
+@if (esOdontologo)
+{
+    <div class="card shadow-sm">
+        <div class="card-body p-0" id="contenedorTabla">
+            <partial name="_TablaEnviadosPartial" model="Model" />
+        </div>
+    </div>
+
+    <partial name="_ModalCrud" />
+}
+else
+{
+    foreach (var m in Model)
+    {
+        var esNuevo = nuevos.Contains(m.Id);
+        <div class="card mensaje mb-3 @(esNuevo ? "mensaje-nuevo" : "")">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="mensaje-icono tipo-@m.Tipo.ToString().ToLowerInvariant()" aria-hidden="true">
+                            <i class="bi @(m.Tipo switch { TipoMensaje.Demora => "bi-hourglass-split", TipoMensaje.Reprogramacion => "bi-arrow-repeat", TipoMensaje.Cancelacion => "bi-x-circle", TipoMensaje.Indicaciones => "bi-clipboard2-check", _ => "bi-chat-left-text" })"></i>
+                        </span>
+                        <div>
+                            <h5 class="mb-0">@m.Asunto @if (esNuevo) { <span class="badge bg-danger ms-1">Nuevo</span> }</h5>
+                            <div class="small text-muted">De @m.Odontologo?.Usuario?.NombreYApellido · @Formato.FechaHora(m.FechaEnvio)</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-info align-self-start">@Formato.NombreEnum(m.Tipo)</span>
+                </div>
+                <p class="mb-2" style="white-space: pre-line">@m.Texto</p>
+                @if (m.Turno != null)
+                {
+                    <div class="small text-muted mb-2">
+                        <i class="bi bi-calendar2-week"></i> Sobre tu turno del <strong>@Formato.DiaYFecha(m.Turno.FechaHora) a las @m.Turno.FechaHora.ToString("HH:mm")</strong> · @m.Turno.Tratamiento?.Nombre
+                    </div>
+                }
+                @if (m.Tipo is TipoMensaje.Reprogramacion or TipoMensaje.Cancelacion)
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-sm btn-outline-primary" asp-controller="Turnos" asp-action="Index"><i class="bi bi-calendar2-week"></i> Ver mis turnos</a>
+                        <a class="btn btn-sm btn-primary" asp-controller="Turnos" asp-action="Index" asp-route-nuevo="true"><i class="bi bi-calendar-plus"></i> Sacar un nuevo turno</a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    if (!Model.Any())
+    {
+        <div class="card"><div class="card-body text-center text-muted py-5">
+            <div class="display-6 mb-2"><i class="bi bi-chat-left"></i></div>
+            No tenés mensajes. Si tu odontólogo necesita avisarte algo sobre un turno, lo vas a ver acá.
+        </div></div>
+    }
+}
+
+@section Scripts {
+    @if (esOdontologo)
+    {
+        <partial name="_ValidationScriptsPartial" />
+        <script>
+            Crud.init({
+                modalId: 'modalCrud', tablaId: 'contenedorTabla', entidad: 'mensaje',
+                listarUrl: '@Url.Action("EnviadosPartial", "Mensajes")',
+                alAbrir: Clinica.alAbrir
+            });
+        </script>
+    }
+}

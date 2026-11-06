@@ -28,6 +28,7 @@ namespace ClinicaDental.Data
         public DbSet<HistoriaClinica> HistoriasClinicas { get; set; }
         public DbSet<Adjunto> Adjuntos { get; set; }
         public DbSet<PiezaDental> PiezasDentales { get; set; }
+        public DbSet<Mensaje> Mensajes { get; set; }
         public DbSet<LogAuditoria> LogsAuditoria { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -99,6 +100,15 @@ namespace ClinicaDental.Data
             {
                 e.HasOne(p => p.Paciente).WithMany(pa => pa.Piezas).HasForeignKey(p => p.PacienteId).OnDelete(DeleteBehavior.Cascade);
                 e.HasIndex(p => new { p.PacienteId, p.NumeroPieza }).IsUnique();
+            });
+
+            builder.Entity<Mensaje>(e =>
+            {
+                e.HasOne(m => m.Odontologo).WithMany().HasForeignKey(m => m.OdontologoId).OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(m => m.Paciente).WithMany().HasForeignKey(m => m.PacienteId).OnDelete(DeleteBehavior.Restrict);
+                // Si se elimina el turno, el aviso se conserva pero deja de estar asociado a él.
+                e.HasOne(m => m.Turno).WithMany().HasForeignKey(m => m.TurnoId).OnDelete(DeleteBehavior.SetNull);
+                e.HasIndex(m => new { m.PacienteId, m.FechaEnvio });
             });
 
             builder.Entity<LogAuditoria>(e =>
@@ -205,11 +215,16 @@ namespace ClinicaDental.Data
             {
                 if (entrada.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)) continue;
 
+                // Historia clínica, mensajes y archivos: se audita que ocurrió y quién lo hizo, no el contenido
+                // (el registro de auditoría lo lee la administración, que no tiene acceso a la ficha clínica).
+                var reservado = Attribute.IsDefined(entrada.Metadata.ClrType, typeof(ReservadoEnAuditoriaAttribute));
+                const string contenidoReservado = "(contenido reservado)";
+
                 var (accion, detalle) = entrada.State switch
                 {
-                    EntityState.Added => (AccionAuditoria.Crear, Resumir(entrada, usarOriginales: false)),
-                    EntityState.Deleted => (AccionAuditoria.Eliminar, Resumir(entrada, usarOriginales: true)),
-                    _ => (AccionAuditoria.Modificar, DescribirCambios(entrada))
+                    EntityState.Added => (AccionAuditoria.Crear, reservado ? contenidoReservado : Resumir(entrada, usarOriginales: false)),
+                    EntityState.Deleted => (AccionAuditoria.Eliminar, reservado ? contenidoReservado : Resumir(entrada, usarOriginales: true)),
+                    _ => (AccionAuditoria.Modificar, reservado ? contenidoReservado : DescribirCambios(entrada))
                 };
 
                 lista.Add(new CambioPendiente

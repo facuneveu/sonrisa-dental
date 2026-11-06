@@ -1,0 +1,18 @@
+@model (int Numero, PiezaDental? Pieza, bool Editable, int PacienteId)
+@{
+    var estado = Model.Pieza?.Estado ?? EstadoPieza.Sana;
+    var nombre = Formato.NombreEnum(estado);
+    var detalle = $"Pieza {Model.Numero} · {nombre}" + (string.IsNullOrEmpty(Model.Pieza?.Observaciones) ? "" : $" — {Model.Pieza!.Observaciones}");
+}
+
+@if (Model.Editable)
+{
+    <button type="button" class="diente diente-@estado.ToString().ToLowerInvariant()" title="@detalle" aria-label="@detalle. Tocar para modificar."
+            onclick="Crud.abrir('@Url.Action("FormularioPieza", "Ficha", new { pacienteId = Model.PacienteId, numero = Model.Numero })')">
+        @Model.Numero
+    </button>
+}
+else
+{
+    <span class="diente diente-@estado.ToString().ToLowerInvariant()" title="@detalle" aria-label="@detalle" role="img">@Model.Numero</span>
+}

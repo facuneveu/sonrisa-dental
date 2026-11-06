@@ -1,0 +1,31 @@
+@model ClinicaDental.Models.ViewModels.PiezaFormViewModel
+
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white">Pieza @Model.NumeroPieza</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<form id="formPieza" asp-action="GuardarPieza" asp-controller="Ficha" method="post" onsubmit="Crud.guardar(event)">
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="PacienteId" />
+        <input type="hidden" asp-for="NumeroPieza" />
+        <span asp-validation-for="NumeroPieza" class="text-danger"></span>
+
+        <div class="form-floating mb-3">
+            <select asp-for="Estado" asp-items="Html.GetEnumSelectList<EstadoPieza>()" class="form-select"></select>
+            <label asp-for="Estado"></label>
+        </div>
+        <div class="form-floating mb-1">
+            <textarea asp-for="Observaciones" class="form-control" placeholder="Observaciones" style="height: 100px"></textarea>
+            <label asp-for="Observaciones"></label>
+            <span asp-validation-for="Observaciones" class="text-danger"></span>
+            <div class="form-text">Una pieza "Sana" y sin observaciones es el estado por defecto: no queda registrada.</div>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar</button>
+    </div>
+</form>

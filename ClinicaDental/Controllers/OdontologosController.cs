@@ -186,7 +186,7 @@ namespace ClinicaDental.Controllers
             if (odontologo == null)
                 return Json(new { success = false, mensaje = "El odontólogo no existe." });
 
-            if (await _context.Turnos.AnyAsync(t => t.OdontologoId == id))
+            if (await _context.Turnos.AnyAsync(t => t.OdontologoId == id) || await _context.Mensajes.AnyAsync(m => m.OdontologoId == id))
                 return Json(new { success = false, mensaje = "El odontólogo tiene turnos registrados y no puede eliminarse. Desactivá su cuenta para que deje de recibir turnos." });
 
             await using var transaccion = await _context.Database.BeginTransactionAsync();

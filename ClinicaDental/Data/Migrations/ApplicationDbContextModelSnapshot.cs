@@ -30,6 +30,10 @@ namespace ClinicaDental.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<byte[]>("Contenido")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
                     b.Property<string>("Descripcion")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -50,11 +54,6 @@ namespace ClinicaDental.Data.Migrations
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("int");
-
-                    b.Property<string>("RutaArchivo")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
 
                     b.Property<long>("TamanoBytes")
                         .HasColumnType("bigint");
@@ -246,6 +245,65 @@ namespace ClinicaDental.Data.Migrations
                     b.HasIndex("Fecha");
 
                     b.ToTable("LogsAuditoria");
+                });
+
+            modelBuilder.Entity("ClinicaDental.Models.Mensaje", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Asunto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaEnvio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaLectura")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OdontologoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TurnoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UsuarioCreacionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UsuarioModificacionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OdontologoId");
+
+                    b.HasIndex("TurnoId");
+
+                    b.HasIndex("PacienteId", "FechaEnvio");
+
+                    b.ToTable("Mensajes");
                 });
 
             modelBuilder.Entity("ClinicaDental.Models.ObraSocial", b =>
@@ -804,6 +862,32 @@ namespace ClinicaDental.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Odontologo");
+                });
+
+            modelBuilder.Entity("ClinicaDental.Models.Mensaje", b =>
+                {
+                    b.HasOne("ClinicaDental.Models.Odontologo", "Odontologo")
+                        .WithMany()
+                        .HasForeignKey("OdontologoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ClinicaDental.Models.Paciente", "Paciente")
+                        .WithMany()
+                        .HasForeignKey("PacienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ClinicaDental.Models.Turno", "Turno")
+                        .WithMany()
+                        .HasForeignKey("TurnoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Odontologo");
+
+                    b.Navigation("Paciente");
+
+                    b.Navigation("Turno");
                 });
 
             modelBuilder.Entity("ClinicaDental.Models.Odontologo", b =>

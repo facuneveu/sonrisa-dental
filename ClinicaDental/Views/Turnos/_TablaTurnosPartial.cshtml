@@ -74,6 +74,22 @@
                             <i class="bi bi-pencil"></i>
                         </button>
                     }
+                    @if (esOdontologo)
+                    {
+                        @* Acciones clínicas: ficha del paciente, aviso por un inconveniente e historia clínica de la consulta *@
+                        <a class="btn btn-sm btn-outline-secondary me-1" title="Ficha del paciente" aria-label="Ficha del paciente"
+                           asp-controller="Ficha" asp-action="Detalle" asp-route-id="@item.PacienteId"><i class="bi bi-folder2-open"></i></a>
+                        @if (item.Estado is EstadoTurno.Pendiente or EstadoTurno.Confirmado)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-warning me-1" title="Avisar al paciente de un inconveniente" aria-label="Avisar al paciente"
+                                    onclick="Crud.abrir('@Url.Action("Formulario", "Mensajes", new { turnoId = item.Id })')"><i class="bi bi-chat-dots"></i></button>
+                        }
+                        @if (item.Estado == EstadoTurno.Atendido)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-success me-1" title="Historia clínica de la consulta" aria-label="Historia clínica"
+                                    onclick="Crud.abrir('@Url.Action("FormularioHistoria", "Ficha", new { turnoId = item.Id })')"><i class="bi bi-journal-medical"></i></button>
+                        }
+                    }
                     @if ((esAdmin || esOdontologo) && siguientes.Any())
                     {
                         <div class="dropdown d-inline-block me-1">

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace ClinicaDental.Models
 {
     // Registro clínico de una consulta: una por turno atendido.
+    [ReservadoEnAuditoria]
     public class HistoriaClinica : AuditableEntity
     {
         public int Id { get; set; }

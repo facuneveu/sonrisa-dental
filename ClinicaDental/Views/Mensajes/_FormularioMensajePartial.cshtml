@@ -1,0 +1,72 @@
+@model ClinicaDental.Models.ViewModels.MensajeFormViewModel
+@{
+    var conTurno = Model.TurnoId != null;
+}
+
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white">Avisar al paciente</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<form id="formMensaje" asp-action="Enviar" asp-controller="Mensajes" method="post" onsubmit="Crud.guardar(event)"
+      data-url-turnos="@Url.Action("TurnosDelPaciente", "Mensajes")"
+      data-nombre="@(ViewBag.NombrePila as string)" data-turno="@(ViewBag.TurnoTexto as string)">
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        @if (conTurno)
+        {
+            @* Se abrió desde un turno: paciente y turno ya están definidos. *@
+            <input type="hidden" asp-for="PacienteId" />
+            <input type="hidden" asp-for="TurnoId" />
+            <div class="alert alert-info py-2">
+                <div class="fw-semibold">@(ViewBag.PacienteNombre as string)</div>
+                <div class="small"><i class="bi bi-calendar2-week"></i> @(ViewBag.TurnoTexto as string)</div>
+            </div>
+            <span asp-validation-for="PacienteId" class="text-danger"></span>
+            <span asp-validation-for="TurnoId" class="text-danger"></span>
+        }
+        else
+        {
+            <div class="form-floating mb-3">
+                <select asp-for="PacienteId" asp-items="@((IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Pacientes)" class="form-select">
+                    <option value="0">-- Elegí un paciente --</option>
+                </select>
+                <label asp-for="PacienteId"></label>
+                <span asp-validation-for="PacienteId" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <select asp-for="TurnoId" class="form-select">
+                    <option value="">Sin turno específico</option>
+                </select>
+                <label asp-for="TurnoId"></label>
+                <span asp-validation-for="TurnoId" class="text-danger"></span>
+                <div class="form-text">Si el aviso es por un turno, elegilo para que el paciente vea a cuál se refiere.</div>
+            </div>
+        }
+
+        <div class="form-floating mb-3">
+            <select asp-for="Tipo" asp-items="Html.GetEnumSelectList<TipoMensaje>()" class="form-select"></select>
+            <label asp-for="Tipo"></label>
+            <div class="form-text">Al elegir el motivo se completa un texto sugerido que podés modificar.</div>
+        </div>
+
+        <div class="form-floating mb-3">
+            <input asp-for="Asunto" class="form-control" placeholder="Asunto" maxlength="100" />
+            <label asp-for="Asunto"></label>
+            <span asp-validation-for="Asunto" class="text-danger"></span>
+        </div>
+
+        <div class="form-floating mb-1">
+            <textarea asp-for="Texto" class="form-control" placeholder="Mensaje" style="height: 150px" maxlength="1000"></textarea>
+            <label asp-for="Texto"></label>
+            <span asp-validation-for="Texto" class="text-danger"></span>
+        </div>
+        <div class="form-text text-end"><span id="contadorTexto">0</span> / 1000</div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-send"></i> Enviar mensaje</button>
+    </div>
+</form>

@@ -20,6 +20,18 @@ namespace ClinicaDental.Services
 
         public static string DiaYFecha(DateTime fecha) => $"{DiaSemana(fecha.DayOfWeek)} {Fecha(fecha)}";
 
+        // Nombre para mostrar de un enum: usa [Display(Name = "...")] si lo tiene (por ejemplo "Extracción indicada").
+        public static string NombreEnum(Enum valor)
+        {
+            var campo = valor.GetType().GetField(valor.ToString());
+            var display = campo?.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.DisplayAttribute), false)
+                .Cast<System.ComponentModel.DataAnnotations.DisplayAttribute>().FirstOrDefault();
+            return display?.Name ?? valor.ToString();
+        }
+
+        public static string TamanoArchivo(long bytes) =>
+            bytes >= 1024 * 1024 ? $"{bytes / 1024d / 1024d:0.0} MB" : $"{Math.Max(1, bytes / 1024)} KB";
+
         private static readonly string[] DiasCortos = { "Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb" };
 
         public static string DiaCorto(DayOfWeek dia) => DiasCortos[(int)dia];

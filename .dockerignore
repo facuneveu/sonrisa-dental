@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.git
+.git/
+.gitignore
+docs/
+*.md
+**/appsettings.Secrets.json

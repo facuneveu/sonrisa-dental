@@ -8,6 +8,7 @@ namespace ClinicaDental.Models
         public const string Paciente = "Paciente";
 
         public const string AdminYOdontologo = Administrador + "," + Odontologo;
+        public const string OdontologoOPaciente = Odontologo + "," + Paciente;
 
         public static readonly string[] Todos = { Administrador, Odontologo, Paciente };
     }

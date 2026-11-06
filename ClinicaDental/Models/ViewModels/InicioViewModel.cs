@@ -8,5 +8,6 @@ namespace ClinicaDental.Models.ViewModels
         public string Rol { get; set; } = string.Empty;
         public List<Indicador> Indicadores { get; set; } = new();
         public List<Turno> ProximosTurnos { get; set; } = new();
+        public int MensajesSinLeer { get; set; }
     }
 }

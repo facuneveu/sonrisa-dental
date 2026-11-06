@@ -192,7 +192,8 @@ namespace ClinicaDental.Controllers
             if (paciente == null)
                 return Json(new { success = false, mensaje = "El paciente no existe." });
 
-            if (await _context.Turnos.AnyAsync(t => t.PacienteId == id) || await _context.Adjuntos.AnyAsync(a => a.PacienteId == id))
+            if (await _context.Turnos.AnyAsync(t => t.PacienteId == id) || await _context.Adjuntos.AnyAsync(a => a.PacienteId == id)
+                || await _context.Mensajes.AnyAsync(m => m.PacienteId == id))
                 return Json(new { success = false, mensaje = "El paciente tiene turnos o archivos registrados y no puede eliminarse (es parte de su historia clínica). Desactivá su cuenta en su lugar." });
 
             await using var transaccion = await _context.Database.BeginTransactionAsync();

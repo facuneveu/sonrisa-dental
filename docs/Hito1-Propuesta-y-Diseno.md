@@ -34,8 +34,10 @@ Tres roles, administrados con ASP.NET Core Identity:
 | Gestionar pacientes | — | — | ✅ |
 | Gestionar odontólogos y sus horarios de atención | — | — | ✅ |
 | Gestionar especialidades, tratamientos y obras sociales | — | — | ✅ |
-| Cargar historia clínica y odontograma *(Hito 3)* | — | ✅ | — |
-| Ver y descargar sus estudios *(Hito 3)* | ✅ | ✅ | — |
+| Cargar historia clínica, odontograma y archivos del paciente | — | ✅ (de sus pacientes) | — |
+| Ver su propia historia clínica, odontograma y estudios | ✅ | ✅ (de sus pacientes) | — |
+| Avisar a un paciente de un inconveniente (demora, reprogramación, cancelación) | — | ✅ | — |
+| Recibir y leer esos avisos | ✅ | — | — |
 | Consultar el registro de auditoría | — | — | ✅ |
 
 > Los permisos se validan **siempre en el servidor** (atributos `[Authorize(Roles = ...)]` y comprobación de pertenencia del registro). Ocultar un botón en pantalla no se considera una medida de seguridad.
@@ -44,7 +46,7 @@ Tres roles, administrados con ASP.NET Core Identity:
 
 > 🖼️ Para verlo como imagen, descargarlo en SVG o guardarlo como PDF, abrí [DER.html](DER.html) en el navegador.
 
-El modelo tiene **11 tablas propias**, además de las 7 de Identity (`AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, etc.). La guía pide un mínimo de 7 sin contar Identity.
+El modelo tiene **12 tablas propias**, además de las 7 de Identity (`AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, etc.). La guía pide un mínimo de 7 sin contar Identity.
 
 ```mermaid
 erDiagram
@@ -61,6 +63,9 @@ erDiagram
     Paciente ||--o{ Adjunto : "tiene"
     HistoriaClinica |o--o{ Adjunto : "incluye"
     Paciente ||--o{ PiezaDental : "odontograma"
+    Odontologo ||--o{ Mensaje : "envía"
+    Paciente ||--o{ Mensaje : "recibe"
+    Turno |o--o{ Mensaje : "motivo de"
 
     Usuario {
         string Id PK
@@ -141,7 +146,7 @@ erDiagram
         int HistoriaClinicaId FK
         int Tipo
         string NombreOriginal
-        string RutaArchivo
+        blob Contenido
         string TipoContenido
         long TamanoBytes
     }
@@ -151,6 +156,17 @@ erDiagram
         int NumeroPieza
         int Estado
         string Observaciones
+    }
+    Mensaje {
+        int Id PK
+        int OdontologoId FK
+        int PacienteId FK
+        int TurnoId FK
+        int Tipo
+        string Asunto
+        string Texto
+        datetime FechaEnvio
+        datetime FechaLectura
     }
     LogAuditoria {
         long Id PK
@@ -181,8 +197,9 @@ Además, todas las entidades menos `LogAuditoria` incluyen los campos de auditor
 | `HorarioAtencion` | Franja en la que un odontólogo atiende un día de la semana (puede haber varias por día). |
 | `Turno` | Reserva de un paciente con un odontólogo para un tratamiento, con estado. |
 | `HistoriaClinica` | Registro clínico de una consulta (diagnóstico, procedimiento, indicaciones). |
-| `Adjunto` | Archivo del paciente: radiografía (imagen) o presupuesto / estudio (PDF). |
+| `Adjunto` | Archivo del paciente: radiografía (imagen) o presupuesto / estudio (PDF). Su contenido se guarda en la base. |
 | `PiezaDental` | Estado de una pieza (numeración FDI) en el odontograma del paciente. |
+| `Mensaje` | Aviso del odontólogo a un paciente ante un inconveniente, opcionalmente ligado a un turno; registra cuándo fue leído. |
 | `LogAuditoria` | Registro de quién creó, modificó o eliminó cada dato, y cuándo. |
 
 ### Estados de un turno
@@ -204,6 +221,9 @@ Pendiente ──► Confirmado ──► Atendido
 - **La duración del turno se copia al reservar.** Si luego cambia la duración del tratamiento, los turnos ya dados no se corren ni se superponen.
 - **Doble reserva imposible.** Además de validar la disponibilidad en el servidor, la base tiene un índice único filtrado sobre `(OdontologoId, FechaHora)` para turnos no cancelados: si dos personas confirman el mismo horario a la vez, la base rechaza a la segunda.
 - **Auditoría en dos niveles, automática.** Cada tabla lleva "creado por / modificado por" (se ve en las pantallas de gestión), y además `LogAuditoria` guarda cada alta, cambio (con el valor anterior y el nuevo) y baja. Se completa dentro de `SaveChanges` del `DbContext`, por lo que ningún controlador puede olvidarse de auditar.
+- **Los archivos del paciente viven en la base, no en una carpeta pública.** Una radiografía es información sensible: si estuviera en `wwwroot`, cualquiera con el enlace podría abrirla. Se guardan como `varbinary` y se descargan solo a través de un controlador que comprueba quién la pide (el propio paciente o un odontólogo con turnos con él; la administración no). Además se valida el formato por los primeros bytes del archivo y no por lo que declara el navegador, y se limita a 5 MB. Como ventaja, los archivos sobreviven a los hostings con disco temporal.
+- **La ficha clínica es privada, también en la auditoría.** La administración gestiona personas y turnos pero no ve historias clínicas, mensajes ni archivos. Para que el registro de auditoría (que sí lee) no filtre ese contenido, las entidades marcadas con `[ReservadoEnAuditoria]` registran quién y cuándo, pero no *qué* contenían.
+- **Los avisos al paciente solo salen de la agenda del odontólogo.** Solo puede escribirle a pacientes con los que tiene o tuvo un turno, el mensaje se redacta a partir de una plantilla según el motivo (demora, reprogramación, cancelación, indicaciones) y queda registrado cuándo el paciente lo leyó. Al cancelar un turno, el sistema ofrece avisar en el mismo momento.
 - **Hora de la clínica.** El servidor de hosting suele estar en UTC; todas las fechas se calculan con la hora de Argentina para que "hoy", los horarios libres y la auditoría no salgan corridos tres horas.
 
 ## 5. Módulo de IA (Hito 4)
@@ -220,5 +240,5 @@ Se implementará la **Opción A de la guía: chat flotante con Google Gemini** (
 |---|---|---|
 | 1 | Tema, DER preliminar, roles | ✅ Este documento |
 | 2 | Base creada con EF Core, Identity configurado, CRUD principales | ✅ Ver `README.md` |
-| 3 | Adjuntos (radiografías y PDF), historia clínica, odontograma, despliegue | Pendiente |
+| 3 | Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, preparación del despliegue | ✅ Ver `README.md` y `docs/Despliegue.md` (falta publicar: requiere tus cuentas) |
 | 4 | Módulo de IA, defensa | Pendiente |

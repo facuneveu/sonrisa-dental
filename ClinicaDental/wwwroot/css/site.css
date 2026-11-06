@@ -272,6 +272,47 @@ hr { border-color: var(--linea); opacity: 1; }
 .profesional-card { transition: box-shadow .2s ease, border-color .2s ease; }
 .profesional-card:hover { border-color: #b5d3d6; box-shadow: 0 18px 34px -22px rgba(15, 59, 74, .5); }
 
+/* ---------- Ficha clínica: odontograma, consultas y archivos ---------- */
+.badge-nav { margin-left: auto; min-width: 1.4rem; padding: .1rem .45rem; border-radius: 999px; background: #c0392b; color: #fff;
+  font-size: .72rem; font-weight: 700; text-align: center; }
+
+.odontograma { display: flex; flex-direction: column; gap: 1.25rem; align-items: center; overflow-x: auto; padding: .25rem; }
+.odontograma .arcada { display: flex; gap: 1rem; }
+.odontograma .arcada + .arcada { padding-top: 1rem; border-top: 2px dashed var(--linea); }
+.odontograma .mitad { display: flex; gap: .3rem; }
+.diente { width: 2.6rem; height: 3rem; border-radius: 12px 12px 16px 16px; border: 2px solid #9db8bc; background: #fff; color: var(--ink);
+  font-weight: 700; font-size: .82rem; display: inline-grid; place-items: center; padding: 0; transition: transform .12s ease, box-shadow .12s ease; }
+button.diente { cursor: pointer; }
+button.diente:hover, button.diente:focus-visible { transform: translateY(-3px); box-shadow: 0 8px 16px -8px rgba(15, 59, 74, .55); outline: 0; border-color: var(--primario); }
+.diente-sana { background: #fff; border-color: #9db8bc; }
+.diente-caries { background: #f8d4d0; border-color: #c0392b; color: #7a1f14; }
+.diente-obturada { background: #d3e6f5; border-color: #2f77b5; color: #174a75; }
+.diente-endodoncia { background: #e3d7f3; border-color: #7a4fb0; color: #4a2a7a; }
+.diente-corona { background: #f6e6b8; border-color: #b9891a; color: #6b4d07; }
+.diente-implante { background: #cfe9e7; border-color: #0b7a76; color: #06504d; }
+.diente-ausente { background: #e8ecec; border-color: #9aa5a7; color: #6b7677; text-decoration: line-through; border-style: dashed; }
+.diente-extraccionindicada { background: #fbdcc4; border-color: #d2691e; color: #7a3a0a; }
+
+.leyenda { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; justify-content: center; font-size: .82rem; color: var(--texto-2); }
+.leyenda-item { display: inline-flex; align-items: center; gap: .4rem; }
+.muestra { width: 1.1rem; height: 1.1rem; border-radius: 5px; border: 2px solid; display: inline-block; }
+
+.consulta-datos dt { font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--texto-2); margin-top: .6rem; }
+.consulta-datos dd { margin: 0; white-space: pre-line; }
+.consulta { border-left: 4px solid var(--primario); }
+
+.archivo-vista { flex: 0 0 76px; width: 76px; height: 76px; border-radius: 10px; overflow: hidden; border: 1px solid var(--linea);
+  display: grid; place-items: center; background: #f2f7f7; text-decoration: none; }
+.archivo-vista img { width: 100%; height: 100%; object-fit: cover; }
+.archivo-pdf { font-size: 2.2rem; color: #b53a3a; }
+.min-w-0 { min-width: 0; }
+
+.mensaje { border-left: 4px solid var(--linea); }
+.mensaje-nuevo { border-left-color: #c0392b; box-shadow: 0 0 0 1px rgba(192, 57, 43, .25), 0 10px 28px -18px rgba(192, 57, 43, .5); }
+.mensaje-icono { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; background: #d6efee; color: var(--primario-d); }
+.mensaje-icono.tipo-cancelacion { background: #f8e4e4; color: #8c2b2b; }
+.mensaje-icono.tipo-demora, .mensaje-icono.tipo-reprogramacion { background: #fbefd2; color: #7a5208; }
+
 /* En pantallas medianas (tablet horizontal / notebook chica) el menú lateral cede espacio a las tablas. */
 @media (min-width: 992px) and (max-width: 1199.98px) {
   :root { --sidebar-w: 220px; }
@@ -279,4 +320,11 @@ hr { border-color: var(--linea); opacity: 1; }
   .sidebar .marca { font-size: 1.05rem; gap: .5rem; padding-bottom: 1rem; }
   .sidebar .marca-icono { width: 34px; height: 34px; flex: 0 0 34px; }
   .sidebar .marca small { font-size: .58rem; letter-spacing: .08em; }
+  .diente { width: 2.15rem; height: 2.6rem; font-size: .76rem; }
+  .odontograma .arcada { gap: .6rem; }
+  .odontograma .mitad { gap: .2rem; }
+}
+@media (max-width: 991.98px) {
+  .diente { width: 1.9rem; height: 2.4rem; font-size: .72rem; }
+  .odontograma .mitad { gap: .15rem; }
 }

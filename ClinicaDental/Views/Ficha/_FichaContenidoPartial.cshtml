@@ -1,0 +1,182 @@
+@model ClinicaDental.Models.ViewModels.FichaViewModel
+@inject NombresUsuarioService Nombres
+@{
+    var id = Model.Paciente.Id;
+    var editable = Model.PuedeEditar;
+
+    int[][] cuadrantes =
+    {
+        new[] { 18, 17, 16, 15, 14, 13, 12, 11 }, new[] { 21, 22, 23, 24, 25, 26, 27, 28 },
+        new[] { 48, 47, 46, 45, 44, 43, 42, 41 }, new[] { 31, 32, 33, 34, 35, 36, 37, 38 }
+    };
+    var conNotas = Model.Piezas.Values.Where(p => !string.IsNullOrEmpty(p.Observaciones)).OrderBy(p => p.NumeroPieza).ToList();
+}
+
+@* ============================== CONSULTAS ============================== *@
+<section id="consultas" class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-journal-medical"></i> Consultas <span class="badge bg-info">@Model.Consultas.Count</span></h4>
+    </div>
+
+    @if (editable && Model.Pendientes.Any())
+    {
+        <div class="alert alert-warning">
+            <div class="fw-semibold mb-2"><i class="bi bi-exclamation-triangle"></i> Consultas atendidas sin historia clínica</div>
+            @foreach (var p in Model.Pendientes)
+            {
+                <div class="d-flex justify-content-between align-items-center gap-2 py-1">
+                    <span>@Formato.DiaYFecha(p.Fecha) · @p.Tratamiento</span>
+                    <button type="button" class="btn btn-sm btn-primary"
+                            onclick="Crud.abrir('@Url.Action("FormularioHistoria", "Ficha", new { turnoId = p.TurnoId })')">
+                        <i class="bi bi-pencil-square"></i> Cargar
+                    </button>
+                </div>
+            }
+        </div>
+    }
+
+    @foreach (var c in Model.Consultas)
+    {
+        <div class="card consulta mb-3">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                    <div>
+                        <div class="fw-bold">@Formato.DiaYFecha(c.Fecha) · @c.Fecha.ToString("HH:mm")</div>
+                        <div class="text-muted small">
+                            @c.Tratamiento · @c.Odontologo
+                            @if (c.EsMia) { <span class="badge bg-success ms-1">Tu consulta</span> }
+                        </div>
+                    </div>
+                    @if (editable && c.EsMia)
+                    {
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-warning" title="Editar historia clínica" aria-label="Editar historia clínica"
+                                    onclick="Crud.abrir('@Url.Action("FormularioHistoria", "Ficha", new { turnoId = c.TurnoId })')">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                        </div>
+                    }
+                </div>
+                <dl class="mb-0 consulta-datos">
+                    <dt>Diagnóstico</dt><dd>@c.Diagnostico</dd>
+                    @if (!string.IsNullOrEmpty(c.Procedimiento)) { <dt>Procedimiento</dt><dd>@c.Procedimiento</dd> }
+                    @if (!string.IsNullOrEmpty(c.Indicaciones)) { <dt>Indicaciones</dt><dd>@c.Indicaciones</dd> }
+                </dl>
+                @if (c.Archivos > 0)
+                {
+                    <div class="small text-muted mt-2"><i class="bi bi-paperclip"></i> @c.Archivos archivo@(c.Archivos == 1 ? "" : "s") adjunto@(c.Archivos == 1 ? "" : "s") a esta consulta</div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!Model.Consultas.Any())
+    {
+        <div class="card"><div class="card-body text-center text-muted py-4">
+            <div class="display-6 mb-2"><i class="bi bi-journal"></i></div>
+            Todavía no hay consultas registradas.
+        </div></div>
+    }
+</section>
+
+@* ============================== ODONTOGRAMA ============================== *@
+<section id="odontograma" class="mb-5">
+    <h4 class="mb-1"><i class="bi bi-grid-3x2-gap"></i> Odontograma</h4>
+    <p class="text-muted small">Estado de cada pieza, con numeración internacional (FDI).@(editable ? " Tocá una pieza para modificarla." : "")</p>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="odontograma" role="group" aria-label="Odontograma">
+                <div class="arcada">
+                    <div class="mitad">@foreach (var n in cuadrantes[0]) { <partial name="_DientePartial" model="(n, Model.Piezas.GetValueOrDefault(n), editable, id)" /> }</div>
+                    <div class="mitad">@foreach (var n in cuadrantes[1]) { <partial name="_DientePartial" model="(n, Model.Piezas.GetValueOrDefault(n), editable, id)" /> }</div>
+                </div>
+                <div class="arcada">
+                    <div class="mitad">@foreach (var n in cuadrantes[2]) { <partial name="_DientePartial" model="(n, Model.Piezas.GetValueOrDefault(n), editable, id)" /> }</div>
+                    <div class="mitad">@foreach (var n in cuadrantes[3]) { <partial name="_DientePartial" model="(n, Model.Piezas.GetValueOrDefault(n), editable, id)" /> }</div>
+                </div>
+            </div>
+
+            <div class="leyenda mt-3">
+                @foreach (var e in Enum.GetValues<EstadoPieza>())
+                {
+                    <span class="leyenda-item"><span class="muestra diente-@e.ToString().ToLowerInvariant()"></span> @Formato.NombreEnum(e)</span>
+                }
+            </div>
+
+            @if (conNotas.Any())
+            {
+                <hr />
+                <div class="fw-semibold small text-uppercase text-muted mb-1">Notas por pieza</div>
+                @foreach (var p in conNotas)
+                {
+                    <div class="small py-1"><strong>Pieza @p.NumeroPieza</strong> (@Formato.NombreEnum(p.Estado)): @p.Observaciones</div>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+@* ============================== ARCHIVOS ============================== *@
+<section id="archivos" class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="bi bi-paperclip"></i> Archivos <span class="badge bg-info">@Model.Adjuntos.Count</span></h4>
+        @if (editable)
+        {
+            <button type="button" class="btn btn-primary btn-sm"
+                    onclick="Crud.abrir('@Url.Action("FormularioAdjunto", "Ficha", new { pacienteId = id })')">
+                <i class="bi bi-upload"></i> Subir archivo
+            </button>
+        }
+    </div>
+
+    <div class="row g-3">
+        @foreach (var a in Model.Adjuntos)
+        {
+            var esImagen = ArchivoService.EsImagen(a.TipoContenido);
+            var consulta = a.HistoriaClinicaId is { } hid ? Model.Consultas.FirstOrDefault(c => c.Id == hid) : null;
+            <div class="col-md-6 col-xl-4">
+                <div class="card archivo h-100">
+                    <div class="card-body d-flex gap-3">
+                        <a href="@Url.Action("Archivo", "Ficha", new { id = a.Id })" target="_blank" rel="noopener" class="archivo-vista" aria-label="Abrir @a.Nombre">
+                            @if (esImagen)
+                            {
+                                <img src="@Url.Action("Archivo", "Ficha", new { id = a.Id })" alt="@a.Nombre" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span class="archivo-pdf"><i class="bi bi-file-earmark-pdf"></i></span>
+                            }
+                        </a>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold text-break">@a.Nombre</div>
+                            <div class="mb-1"><span class="badge bg-info">@Formato.NombreEnum(a.Tipo)</span> <span class="small text-muted">@Formato.TamanoArchivo(a.TamanoBytes)</span></div>
+                            @if (!string.IsNullOrEmpty(a.Descripcion)) { <div class="small">@a.Descripcion</div> }
+                            <div class="small text-muted">
+                                @Formato.Fecha(a.Fecha) · @(await Nombres.NombreAsync(a.SubidoPorId))
+                                @if (consulta != null) { <div><i class="bi bi-link-45deg"></i> Consulta del @Formato.Fecha(consulta.Fecha)</div> }
+                            </div>
+                            <div class="mt-2 d-flex gap-1">
+                                <a class="btn btn-sm btn-outline-primary" href="@Url.Action("Archivo", "Ficha", new { id = a.Id })" target="_blank" rel="noopener" title="Ver" aria-label="Ver @a.Nombre"><i class="bi bi-eye"></i></a>
+                                <a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Archivo", "Ficha", new { id = a.Id, descargar = true })" title="Descargar" aria-label="Descargar @a.Nombre"><i class="bi bi-download"></i></a>
+                                @if (editable && a.SubidoPorId != null && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == a.SubidoPorId)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar" aria-label="Eliminar @a.Nombre"
+                                            data-nombre="@a.Nombre" onclick="Crud.eliminar(@a.Id, this.dataset.nombre)"><i class="bi bi-trash"></i></button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Adjuntos.Any())
+    {
+        <div class="card"><div class="card-body text-center text-muted py-4">
+            <div class="display-6 mb-2"><i class="bi bi-folder2-open"></i></div>
+            No hay radiografías ni estudios cargados.
+        </div></div>
+    }
+</section>

@@ -1,0 +1,34 @@
+@model IEnumerable<Mensaje>
+
+<div class="table-responsive">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr><th>Enviado</th><th>Paciente</th><th>Mensaje</th><th>Turno</th><th>Lectura</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var m in Model)
+            {
+                <tr>
+                    <td class="text-nowrap small">@Formato.FechaHora(m.FechaEnvio)</td>
+                    <td>@m.Paciente?.Usuario?.NombreCompleto</td>
+                    <td style="max-width: 360px">
+                        <div class="fw-semibold">@m.Asunto <span class="badge bg-info ms-1">@Formato.NombreEnum(m.Tipo)</span></div>
+                        <div class="small text-muted">@m.Texto</div>
+                    </td>
+                    <td class="small">
+                        @if (m.Turno != null) { <span>@Formato.Fecha(m.Turno.FechaHora) @m.Turno.FechaHora.ToString("HH:mm")<br />@m.Turno.Tratamiento?.Nombre</span> }
+                        else { <span class="text-muted">—</span> }
+                    </td>
+                    <td class="text-nowrap">
+                        @if (m.FechaLectura is { } leido) { <span class="badge bg-success"><i class="bi bi-check2-all"></i> Leído</span><div class="small text-muted">@Formato.FechaHora(leido)</div> }
+                        else { <span class="badge bg-warning">Sin leer</span> }
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr><td colspan="5" class="text-center text-muted py-4">Todavía no enviaste mensajes. Podés avisarle a un paciente desde tu agenda o desde su ficha.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

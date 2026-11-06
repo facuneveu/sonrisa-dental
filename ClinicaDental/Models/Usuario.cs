@@ -27,7 +27,11 @@ namespace ClinicaDental.Models
         [Display(Name = "Fecha de alta")]
         public DateTime FechaAlta { get; set; } = Services.Reloj.Ahora;
 
+        // Para listados ordenados por apellido: "Fernández, Lucía"
         [Display(Name = "Nombre completo")]
         public string NombreCompleto => $"{Apellido}, {Nombre}";
+
+        // Para dirigirse a la persona (mensajes, avisos): "Lucía Fernández"
+        public string NombreYApellido => $"{Nombre} {Apellido}";
     }
 }

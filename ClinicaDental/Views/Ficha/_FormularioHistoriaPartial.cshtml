@@ -1,0 +1,48 @@
+@model HistoriaClinica
+@{
+    var turno = (Turno)ViewBag.Turno;
+}
+
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white">Historia clínica</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<form id="formHistoria" asp-action="GuardarHistoria" asp-controller="Ficha" method="post" onsubmit="Crud.guardar(event)">
+    <div class="modal-body">
+        <div class="alert alert-info py-2">
+            <strong>@turno.Paciente?.Usuario?.NombreCompleto</strong><br />
+            <span class="small">@Formato.DiaYFecha(turno.FechaHora) · @turno.FechaHora.ToString("HH:mm") · @turno.Tratamiento?.Nombre</span>
+            @if (!string.IsNullOrEmpty(turno.Paciente?.Alergias))
+            {
+                <div class="small mt-1"><i class="bi bi-exclamation-triangle-fill text-warning"></i> <strong>Alergias:</strong> @turno.Paciente!.Alergias</div>
+            }
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="TurnoId" />
+
+        <div class="form-floating mb-3">
+            <textarea asp-for="Diagnostico" class="form-control" placeholder="Diagnóstico" style="height: 100px"></textarea>
+            <label asp-for="Diagnostico"></label>
+            <span asp-validation-for="Diagnostico" class="text-danger"></span>
+        </div>
+        <div class="form-floating mb-3">
+            <textarea asp-for="Procedimiento" class="form-control" placeholder="Procedimiento" style="height: 100px"></textarea>
+            <label asp-for="Procedimiento"></label>
+            <span asp-validation-for="Procedimiento" class="text-danger"></span>
+        </div>
+        <div class="form-floating mb-1">
+            <textarea asp-for="Indicaciones" class="form-control" placeholder="Indicaciones" style="height: 100px"></textarea>
+            <label asp-for="Indicaciones"></label>
+            <span asp-validation-for="Indicaciones" class="text-danger"></span>
+            <div class="form-text">El paciente ve estas indicaciones en su historia clínica.</div>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar</button>
+    </div>
+</form>

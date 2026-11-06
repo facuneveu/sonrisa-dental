@@ -5,6 +5,7 @@
     var esOdontologo = User.IsInRole(Roles.Odontologo) && !esAdmin;
     var esPaciente = User.IsInRole(Roles.Paciente) && !esAdmin;
     var puedeReservar = esAdmin || esPaciente;
+    var usaModal = puedeReservar || esOdontologo;   // el odontólogo abre historia clínica y mensajes en el modal
 
     ViewData["Title"] = esAdmin ? "Turnos" : esOdontologo ? "Mi agenda" : "Mis turnos";
 
@@ -98,13 +99,13 @@
     </div>
 </div>
 
-@if (puedeReservar)
+@if (usaModal)
 {
     <partial name="_ModalCrud" />
 }
 
 @section Scripts {
-    @if (puedeReservar)
+    @if (usaModal)
     {
         <partial name="_ValidationScriptsPartial" />
     }
@@ -121,7 +122,7 @@
         Crud.init({
             modalId: 'modalCrud', tablaId: 'contenedorTabla', entidad: 'turno',
             eliminarUrl: '@Url.Action("Eliminar", "Turnos")',
-            alAbrir: iniciarFormularioTurno,
+            alAbrir: raiz => { iniciarFormularioTurno(raiz); Clinica.alAbrir(raiz); },
             listarUrl: () => '@Url.Action("ListarPartial", "Turnos")?' + new URLSearchParams({
                 desde: filtros.desde.value,
                 hasta: filtros.hasta.value,
@@ -180,8 +181,11 @@
         marcarPeriodo();
 
         // ----- Cambio de estado (odontólogo, administración y cancelación del paciente) -----
+        const esOdontologo = @(esOdontologo ? "true" : "false");
+
         function cambiarEstado(id, estado, pregunta) {
-            const ejecutar = () => Crud.enviarAccion('@Url.Action("CambiarEstado", "Turnos")', id, 'No se pudo actualizar el turno', { estado });
+            const ejecutar = () => Crud.enviarAccion('@Url.Action("CambiarEstado", "Turnos")', id, 'No se pudo actualizar el turno', { estado })
+                .then(data => { if (data?.success && esOdontologo) seguimientoDeEstado(id, estado); });
 
             if (estado !== 'Cancelado') { ejecutar(); return; }
 
@@ -195,6 +199,33 @@
                 confirmButtonText: 'Sí, cancelar turno',
                 cancelButtonText: 'Volver'
             }).then(r => { if (r.isConfirmed) ejecutar(); });
+        }
+
+        // Después de cambiar el estado, el odontólogo recibe el paso siguiente natural.
+        function seguimientoDeEstado(turnoId, estado) {
+            if (estado === 'Atendido') {
+                Swal.fire({
+                    title: 'Consulta atendida',
+                    text: '¿Querés cargar ahora la historia clínica de esta consulta?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0b7a76',
+                    cancelButtonColor: '#51696f',
+                    confirmButtonText: 'Cargar ahora',
+                    cancelButtonText: 'Más tarde'
+                }).then(r => { if (r.isConfirmed) Crud.abrir('@Url.Action("FormularioHistoria", "Ficha")?turnoId=' + turnoId); });
+            } else if (estado === 'Cancelado') {
+                Swal.fire({
+                    title: 'Turno cancelado',
+                    text: '¿Querés avisarle al paciente?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0b7a76',
+                    cancelButtonColor: '#51696f',
+                    confirmButtonText: 'Sí, avisar',
+                    cancelButtonText: 'No hace falta'
+                }).then(r => { if (r.isConfirmed) Crud.abrir('@Url.Action("Formulario", "Mensajes")?turnoId=' + turnoId + '&tipo=2'); });
+            }
         }
 
         // ----- Formulario de reserva: tratamiento -> odontólogo -> fecha -> horarios libres -----

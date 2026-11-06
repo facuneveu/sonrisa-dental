@@ -1,9 +1,11 @@
+@inject MensajesService Mensajes
 @{
     var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
     string Act(string c) => string.Equals(ctrl, c, StringComparison.OrdinalIgnoreCase) ? "activo" : "";
     var esAdmin = User.IsInRole(Roles.Administrador);
     var esOdontologo = User.IsInRole(Roles.Odontologo);
     var esPaciente = User.IsInRole(Roles.Paciente);
+    var noLeidos = esPaciente ? await Mensajes.NoLeidosAsync() : 0;
 }
 
 <nav aria-label="Navegación principal">
@@ -12,6 +14,21 @@
     <a class="side-link @Act("Turnos")" asp-area="" asp-controller="Turnos" asp-action="Index">
         <i class="bi bi-calendar2-week"></i> @(esAdmin ? "Turnos" : esOdontologo ? "Mi agenda" : "Mis turnos")
     </a>
+    @if (esPaciente)
+    {
+        <a class="side-link @Act("Ficha")" asp-area="" asp-controller="Ficha" asp-action="Index"><i class="bi bi-journal-medical"></i> Mi historia clínica</a>
+    }
+    @if (esOdontologo)
+    {
+        <a class="side-link @Act("Ficha")" asp-area="" asp-controller="Ficha" asp-action="Index"><i class="bi bi-people"></i> Mis pacientes</a>
+    }
+    @if (esPaciente || esOdontologo)
+    {
+        <a class="side-link @Act("Mensajes")" asp-area="" asp-controller="Mensajes" asp-action="Index">
+            <i class="bi bi-chat-dots"></i> Mensajes
+            @if (noLeidos > 0) { <span class="badge-nav" aria-label="@noLeidos mensajes sin leer">@noLeidos</span> }
+        </a>
+    }
     <a class="side-link @Act("Tratamientos")" asp-area="" asp-controller="Tratamientos" asp-action="Index"><i class="bi bi-clipboard2-pulse"></i> Tratamientos</a>
     @if (!esAdmin)
     {

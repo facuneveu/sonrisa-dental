@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace ClinicaDental.Models
 {
     // Archivo del paciente: radiografías (imágenes) y presupuestos / estudios (PDF).
+    // El contenido se guarda en la base y se descarga solo a través de un controlador que verifica los permisos:
+    // nunca queda en una carpeta pública, y sobrevive a los hostings con disco temporal.
+    [ReservadoEnAuditoria]
     public class Adjunto : AuditableEntity
     {
         public int Id { get; set; }
@@ -21,9 +24,8 @@ namespace ClinicaDental.Models
         [Display(Name = "Archivo")]
         public string NombreOriginal { get; set; } = string.Empty;
 
-        // Ruta relativa dentro de wwwroot/uploads, con nombre generado (nunca el que manda el usuario).
-        [Required, StringLength(300)]
-        public string RutaArchivo { get; set; } = string.Empty;
+        [BindNever, ValidateNever]
+        public byte[] Contenido { get; set; } = Array.Empty<byte>();
 
         [StringLength(100)]
         public string TipoContenido { get; set; } = string.Empty;

@@ -32,3 +32,16 @@ namespace ClinicaDental.Models
         Otro = 3
     }
 }
+
+namespace ClinicaDental.Models
+{
+    // Motivo del aviso del odontólogo al paciente. Sirve para elegir una plantilla y para ordenar los mensajes.
+    public enum TipoMensaje
+    {
+        Demora = 0,
+        [Display(Name = "Reprogramación")] Reprogramacion = 1,
+        [Display(Name = "Cancelación")] Cancelacion = 2,
+        Indicaciones = 3,
+        Otro = 4
+    }
+}
