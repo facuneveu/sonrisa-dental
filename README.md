@@ -2,11 +2,12 @@
 
 Sistema de gestión de turnos para una clínica odontológica. Trabajo Final Integrador de **Programación Web**.
 
-Los pacientes se registran y reservan turnos eligiendo tratamiento, odontólogo y un horario realmente libre; los odontólogos ven su agenda, atienden, cargan la **historia clínica, el odontograma y las radiografías**, y avisan a los pacientes ante cualquier inconveniente; la administración gestiona catálogos, personas y consulta un registro de auditoría.
+Los pacientes se registran y reservan turnos eligiendo tratamiento, odontólogo y un horario realmente libre; los odontólogos ven su agenda, atienden, cargan la **historia clínica, el odontograma y las radiografías**, y avisan a los pacientes ante cualquier inconveniente; la administración gestiona catálogos, personas y consulta un registro de auditoría. Un **asistente virtual con IA (Google Gemini)** responde dudas sobre horarios, tratamientos, precios y obras sociales, y orienta sobre qué especialidad consultar según los síntomas.
 
 > Todos los datos de ejemplo son **ficticios**. No cargues datos reales de personas en este sistema.
 
 📐 Diseño y diagrama de entidad-relación: [`docs/Hito1-Propuesta-y-Diseno.md`](docs/Hito1-Propuesta-y-Diseno.md) · DER como imagen/PDF: [`docs/DER.html`](docs/DER.html)  
+🤖 Cómo funciona el asistente de IA y cómo defenderlo: [`docs/Hito4-Asistente-IA.md`](docs/Hito4-Asistente-IA.md)  
 🚀 Cómo publicarlo y entregarlo: [`docs/Despliegue.md`](docs/Despliegue.md)
 
 ## Tecnologías
@@ -15,6 +16,7 @@ Los pacientes se registran y reservan turnos eligiendo tratamiento, odontólogo 
 - Entity Framework Core 9 (Code First, migraciones) + SQL Server
 - ASP.NET Core Identity con 3 roles: `Administrador`, `Odontologo`, `Paciente`
 - Bootstrap 5, jQuery Validation (Unobtrusive), SweetAlert2, Bootstrap Icons
+- Google Gemini (API REST consumida con `HttpClient`) para el asistente virtual
 
 ## Cómo ejecutarlo
 
@@ -25,26 +27,39 @@ cd ClinicaDental
 dotnet run
 ```
 
-Se abre en `http://localhost:5259` (perfil `https`: `https://localhost:7193`). Al arrancar, la aplicación **crea la base de datos `ClinicaDental_Hito3`, aplica las migraciones y carga los datos de ejemplo** (catálogos, 5 odontólogos con horarios, 5 pacientes, turnos, una historia clínica con odontograma, una radiografía, un presupuesto en PDF y mensajes). No hace falta ningún paso manual de base de datos.
+Se abre en `http://localhost:5359` (perfil `https`: `https://localhost:7293`). Al arrancar, la aplicación **crea la base de datos `ClinicaDental_Hito4`, aplica las migraciones y carga los datos de ejemplo** (catálogos, 5 odontólogos con horarios, 5 pacientes, turnos, una historia clínica con odontograma, una radiografía, un presupuesto en PDF y mensajes). No hace falta ningún paso manual de base de datos.
 
-> Si ya tenías creada la base con una versión anterior, la migración nueva se aplica sola, pero los datos de ejemplo nuevos (archivos y mensajes) **no se agregan** a una base que ya tiene datos. Para verlos, borrá la base `ClinicaDental_Hito3` y volvé a ejecutar.
+> Si ya tenías creada la base con una versión anterior, la migración nueva se aplica sola, pero los datos de ejemplo nuevos (archivos y mensajes) **no se agregan** a una base que ya tiene datos. Para verlos, borrá la base `ClinicaDental_Hito4` y volvé a ejecutar.
 
 ### Cadena de conexión
 
 Por defecto usa el SQL Server local con autenticación de Windows (`appsettings.json`):
 
 ```
-Server=localhost;Database=ClinicaDental_Hito3;Trusted_Connection=True;TrustServerCertificate=True
+Server=localhost;Database=ClinicaDental_Hito4;Trusted_Connection=True;TrustServerCertificate=True
 ```
 
-> **Cada hito tiene su propia base y sus propios puertos** (Hito 2: `ClinicaDental`, puerto 5159 · Hito 3: `ClinicaDental_Hito3`, 5259 · Hito 4: `ClinicaDental_Hito4`, 5359), así que se pueden abrir y ejecutar las versiones sin que una pise a la otra. Antes compartían la base `ClinicaDental` y por eso se rompían entre sí.
+> **Cada hito tiene su propia base y sus propios puertos** (Hito 2: `ClinicaDental`, puerto 5159 · Hito 3: `ClinicaDental_Hito3`, 5259 · Hito 4: `ClinicaDental_Hito4`, 5359), así que se pueden abrir y ejecutar las tres versiones sin que una pise a la otra.
 
 Para usar otra instancia (por ejemplo LocalDB) sin tocar archivos versionados, definí una variable de entorno:
 
 ```bash
 # Windows (PowerShell)
-$env:ConnectionStrings__DefaultConnection = "Server=(localdb)\MSSQLLocalDB;Database=ClinicaDental_Hito3;Trusted_Connection=True;TrustServerCertificate=True"
+$env:ConnectionStrings__DefaultConnection = "Server=(localdb)\MSSQLLocalDB;Database=ClinicaDental_Hito4;Trusted_Connection=True;TrustServerCertificate=True"
 ```
+
+### Clave de la IA (asistente virtual)
+
+El asistente necesita una API key gratuita de Google Gemini ([Google AI Studio](https://aistudio.google.com/apikey), solo pide una cuenta de Google). **La clave no se escribe en ningún archivo del proyecto**: se guarda en los secretos de usuario de .NET.
+
+```bash
+cd ClinicaDental
+dotnet user-secrets set "Gemini:ApiKey" "PEGA-TU-CLAVE-ACA"
+```
+
+En un hosting se define la variable de entorno `Gemini__ApiKey`. Sin clave, todo el sistema funciona igual y el chat avisa que todavía no está configurado.
+
+Los modelos se prueban en el orden de `Gemini:Modelos` (`appsettings.json`): Google retira modelos seguido y `gemini-2.5-flash` ya no se ofrece a claves nuevas, así que si uno no existe o no tiene cuota se pasa al siguiente. Se puede forzar uno con `Gemini:Modelo`.
 
 ### Datos de ejemplo
 
@@ -61,6 +76,9 @@ Se controlan con `"SeedDatosEjemplo"` en `appsettings.json` (`true` por defecto)
 La pantalla de inicio de sesión muestra estas cuentas con un botón para completar el formulario. También se puede crear un paciente nuevo desde **Registrarme**.
 
 ## Funcionalidades por rol
+
+**Todos los roles (con sesión iniciada)**
+- **Asistente virtual "Sonri"** (botón flotante *Consultas*, abajo a la derecha): contesta con los datos reales de la clínica (profesionales y horarios, tratamientos con precio y duración, obras sociales y su cobertura), orienta sobre qué especialidad conviene según los síntomas, avisa ante una urgencia y explica cómo usar cada pantalla según el rol. **No diagnostica ni accede a turnos o historias clínicas.** Tiene atajos con preguntas frecuentes, recuerda la conversación mientras la pestaña está abierta y funciona en celular.
 
 **Paciente**
 - Registro de cuenta propia.
@@ -103,9 +121,11 @@ ClinicaDental/
 │   └── ViewModels/  modelos de formulario (personas, turnos, ficha, mensajes, perfil)
 ├── Data/            DbContext (con la auditoría automática), migraciones y datos de ejemplo
 ├── Services/        disponibilidad de turnos, acceso a la ficha, validación de archivos, mensajes sin leer, hora de Argentina
-├── Views/           vistas Razor; cada ABM = Index + tabla parcial + formulario modal
+│                    y la IA: GeminiClient (HttpClient), AsistenteService (arma el System Prompt con datos de la base)
+├── Views/           vistas Razor; cada ABM = Index + tabla parcial + formulario modal (el chat vive en Shared/_AsistentePartial)
 ├── Areas/Identity/  páginas de inicio de sesión, registro y acceso denegado
-└── wwwroot/         CSS, JS (crud-async.js reutilizado por todas las pantallas; clinica.js para mensajes y archivos)
+└── wwwroot/         CSS, JS (crud-async.js reutilizado por todas las pantallas; clinica.js para mensajes y archivos;
+                     asistente.js para el chat flotante)
 docs/                diseño (DER, roles) y guía de despliegue
 Dockerfile           imagen para hostings con contenedores
 ```
@@ -120,6 +140,7 @@ Dockerfile           imagen para hostings con contenedores
 - **Auditoría sin filtrar datos clínicos:** historia clínica, mensajes y archivos registran quién y cuándo, pero no su contenido.
 - Cabeceras de seguridad en todas las respuestas, cookies de sesión `HttpOnly` y `Secure` detrás de HTTPS.
 - Sin secretos en el repositorio: la cadena de conexión de producción y la clave de la API de IA van por variables de entorno o `dotnet user-secrets`.
+- **Asistente de IA:** solo para personas con sesión iniciada; token antifalsificación en cada consulta; tope de 8 consultas por minuto por persona (la cuota gratuita es chica y compartida); la conversación se valida y se recorta en el servidor (no se confía en lo que manda el navegador); a Google solo viajan datos públicos de la clínica y el rol, nunca datos de pacientes; la clave viaja en una cabecera y no en la URL; lo que contesta la IA se escapa antes de mostrarse; no se guarda el contenido de las conversaciones.
 
 ## Estado del trabajo
 
@@ -127,6 +148,7 @@ Dockerfile           imagen para hostings con contenedores
 - [x] **Hito 2** — Base de datos con EF Core, Identity, CRUD principales y auditoría
 - [x] **Hito 3** — Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, y preparación del despliegue (`Dockerfile`, `/healthz`, guía)
 - [ ] **Publicación:** subir a GitHub y publicar en un hosting (requiere tus cuentas; pasos en [`docs/Despliegue.md`](docs/Despliegue.md))
-- [ ] **Hito 4** — Módulo de IA (asistente con Gemini) y defensa
+- [x] **Hito 4 (código)** — Módulo de IA: chat flotante con Gemini, con el contexto armado desde la base. Probado con un Gemini simulado; falta probarlo con tu clave real
+- [ ] **Hito 4 (defensa)** — Ensayar la demo en vivo y las preguntas de código (ver [`docs/Hito4-Asistente-IA.md`](docs/Hito4-Asistente-IA.md))
 
 **URL pública:** _pendiente: completar después de publicar (ver `docs/Despliegue.md`)_

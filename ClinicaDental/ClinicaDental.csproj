@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>clinicadental-hito3-91d4e6b2-3a7c-4f08-b5e1-c2d8a6f09371</UserSecretsId>
+    <UserSecretsId>clinicadental-hito4-5e2a8c17-d3b9-4a64-8f10-7b6c91e4a2d5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

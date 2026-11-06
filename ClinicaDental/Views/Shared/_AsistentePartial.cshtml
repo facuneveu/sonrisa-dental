@@ -1,0 +1,60 @@
+@* Chat flotante del asistente virtual (Hito 4). Solo se dibuja para personas con sesión iniciada. *@
+@{
+    var esAdmin = User.IsInRole(Roles.Administrador);
+    var esOdontologo = User.IsInRole(Roles.Odontologo);
+    string[] sugerencias = esAdmin
+        ? new[] { "¿Cómo cargo los horarios de un odontólogo?", "¿Dónde veo quién modificó un dato?", "¿Qué tratamientos y precios hay cargados?" }
+        : esOdontologo
+            ? new[] { "¿Cómo aviso a un paciente de una demora?", "¿Cómo cargo la historia clínica de una consulta?", "¿Qué horarios de atención tiene la clínica?" }
+            : new[] { "¿Qué horarios de atención tienen?", "Me duele una muela con el frío, ¿qué especialidad necesito?", "¿Qué obras sociales aceptan?", "¿Cómo saco un turno?" };
+}
+
+<div id="asistente" class="asistente no-print"
+     data-url="@Url.Action("Preguntar", "Asistente")"
+     data-usuario="@User.Identity?.Name"
+     data-max="@ClinicaDental.Services.AsistenteService.MaxCaracteresMensaje">
+
+    <button type="button" class="asistente-fab" id="asistenteAbrir" aria-expanded="false" aria-controls="asistentePanel"
+            aria-label="Abrir el asistente virtual">
+        <i class="bi bi-chat-heart-fill" aria-hidden="true"></i>
+        <span class="asistente-fab-texto">Consultas</span>
+    </button>
+
+    <section class="asistente-panel" id="asistentePanel" role="dialog" aria-label="Asistente virtual de Sonrisa Dental" hidden>
+        <header class="asistente-cab">
+            <span class="asistente-avatar" aria-hidden="true"><i class="bi bi-emoji-smile"></i></span>
+            <div class="asistente-titulo">
+                Sonri, tu asistente
+                <small>Responde con los datos de la clínica</small>
+            </div>
+            <button type="button" class="asistente-icono" id="asistenteBorrar" title="Borrar la conversación" aria-label="Borrar la conversación">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="asistente-icono" id="asistenteCerrar" title="Cerrar" aria-label="Cerrar el asistente">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <div class="asistente-log" id="asistenteLog" role="log" aria-live="polite" aria-relevant="additions"></div>
+
+        <div class="asistente-sugerencias" id="asistenteSugerencias">
+            @foreach (var s in sugerencias)
+            {
+                <button type="button" class="asistente-chip">@s</button>
+            }
+        </div>
+
+        <form class="asistente-form" id="asistenteForm" autocomplete="off">
+            @Html.AntiForgeryToken()
+            <label for="asistenteTexto" class="visually-hidden">Escribí tu consulta</label>
+            <textarea id="asistenteTexto" rows="1" maxlength="@ClinicaDental.Services.AsistenteService.MaxCaracteresMensaje"
+                      placeholder="Escribí tu consulta…"></textarea>
+            <button type="submit" class="asistente-enviar" id="asistenteEnviar" aria-label="Enviar consulta">
+                <i class="bi bi-send-fill" aria-hidden="true"></i>
+            </button>
+        </form>
+        <p class="asistente-pie">Es una orientación general: no reemplaza una consulta ni es un diagnóstico. Ante una urgencia, acudí a una guardia.</p>
+    </section>
+</div>
+
+<script src="~/js/asistente.js" asp-append-version="true"></script>

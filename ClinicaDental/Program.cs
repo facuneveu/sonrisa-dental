@@ -4,7 +4,10 @@ using ClinicaDental.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +71,36 @@ builder.Services.AddScoped<PerfilService>();
 builder.Services.AddScoped<NombresUsuarioService>();
 builder.Services.AddScoped<MensajesService>();
 builder.Services.AddSingleton<ArchivoService>();
+
+// ----- Asistente de IA (Hito 4): chat flotante con Google Gemini -----
+// La clave (Gemini:ApiKey) no está en ningún archivo del repositorio: va en user-secrets o en la variable Gemini__ApiKey.
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection(GeminiOptions.Seccion));
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<GeminiClient>((sp, cliente) =>
+{
+    var opciones = sp.GetRequiredService<IOptions<GeminiOptions>>().Value;
+    cliente.BaseAddress = new Uri(opciones.BaseUrl.EndsWith('/') ? opciones.BaseUrl : opciones.BaseUrl + "/");
+    cliente.Timeout = TimeSpan.FromSeconds(Math.Clamp(opciones.TimeoutSegundos, 5, 120));
+});
+builder.Services.AddScoped<AsistenteService>();
+
+// Tope de consultas al asistente: 8 por minuto y por persona (configurable con Asistente:ConsultasPorMinuto). La cuota
+// gratuita de la API es chica y compartida por todos los usuarios, así que nadie puede agotarla para el resto.
+var consultasPorMinuto = Math.Max(1, builder.Configuration.GetValue("Asistente:ConsultasPorMinuto", 8));
+builder.Services.AddRateLimiter(opciones =>
+{
+    opciones.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    opciones.AddPolicy("asistente", contexto => RateLimitPartition.GetFixedWindowLimiter(
+        contexto.User.Identity?.Name ?? contexto.Connection.RemoteIpAddress?.ToString() ?? "anonimo",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = consultasPorMinuto, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    opciones.OnRejected = async (contexto, ct) =>
+    {
+        contexto.HttpContext.Response.ContentType = "application/json";
+        await contexto.HttpContext.Response.WriteAsync(
+            "{\"ok\":false,\"texto\":\"Estás consultando muy seguido. Esperá un minuto y probá de nuevo.\"}", ct);
+    };
+});
+
 builder.Services.AddControllersWithViews(options =>
 {
     var m = options.ModelBindingMessageProvider;
@@ -139,6 +172,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();   // después de la autenticación: así el tope del asistente se mide por persona
 
 // Chequeo de salud para los hostings que lo piden (responde sin sesión y sin tocar la base de datos).
 app.MapGet("/healthz", () => Results.Text("ok"));

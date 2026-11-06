@@ -228,7 +228,7 @@ Pendiente ──► Confirmado ──► Atendido
 
 ## 5. Módulo de IA (Hito 4)
 
-Se implementará la **Opción A de la guía: chat flotante con Google Gemini** (`gemini-2.5-flash`, cuota gratuita), consumido con `HttpClient` desde un servicio del backend.
+Se implementó la **Opción A de la guía: chat flotante con Google Gemini** (cuota gratuita), consumido con `HttpClient` desde un servicio del backend. La guía propone `gemini-2.5-flash`, pero Google lo restringió a quienes ya lo usaban, así que el servicio prueba una lista de modelos configurable (ver `docs/Hito4-Asistente-IA.md`).
 
 - El *System Prompt* se arma con datos reales de la base: horarios de atención de cada odontólogo, tratamientos con duración y precio, y obras sociales con su cobertura.
 - Orienta al paciente sobre qué especialidad le conviene según sus síntomas (por ejemplo, dolor al tomar frío → Odontología general o Endodoncia) y siempre aclara que **no diagnostica**.
@@ -241,4 +241,4 @@ Se implementará la **Opción A de la guía: chat flotante con Google Gemini** (
 | 1 | Tema, DER preliminar, roles | ✅ Este documento |
 | 2 | Base creada con EF Core, Identity configurado, CRUD principales | ✅ Ver `README.md` |
 | 3 | Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, preparación del despliegue | ✅ Ver `README.md` y `docs/Despliegue.md` (falta publicar: requiere tus cuentas) |
-| 4 | Módulo de IA, defensa | Pendiente |
+| 4 | Módulo de IA (chat flotante con Gemini), defensa | ✅ Código y pruebas con Gemini simulado · falta probar con tu clave real y ensayar la defensa (ver `docs/Hito4-Asistente-IA.md`) |

@@ -19,7 +19,7 @@ Desde la carpeta raíz del proyecto (la que contiene `ClinicaDental.sln`):
 ```bash
 git init
 git add .
-git commit -m "Sonrisa Dental: hitos 1, 2 y 3"
+git commit -m "Sonrisa Dental: hitos 1 a 4"
 git branch -M main
 git remote add origin https://github.com/TU-USUARIO/sonrisa-dental.git
 git push -u origin main
@@ -43,7 +43,9 @@ La aplicación no lleva secretos en el código. Todo lo que cambia entre tu máq
 | `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | Respeta el HTTPS que pone el proxy del hosting | `true` (ya viene en el `Dockerfile`) |
 | `PORT` | Puerto en el que escuchar | Lo define el hosting (Render lo hace solo) |
 | `DataProtection__KeysPath` | *(Opcional)* carpeta persistente para las claves de sesión | Ver más abajo |
-| `Gemini__ApiKey` | *(Hito 4)* clave de la API de IA | Tu clave. **Nunca en el repositorio** |
+| `Gemini__ApiKey` | Clave de la API de IA del asistente virtual. Sin ella el sistema funciona y el chat avisa que no está configurado | Tu clave de [Google AI Studio](https://aistudio.google.com/apikey). **Nunca en el repositorio** |
+| `Gemini__Modelo` | *(Opcional)* fuerza un modelo de Gemini; si no, se prueba la lista de `appsettings.json` | Por ejemplo `gemini-3.8-flash` |
+| `Asistente__ConsultasPorMinuto` | *(Opcional)* tope de consultas al chat por persona | `8` por defecto |
 
 Al arrancar, la aplicación **crea las tablas por sí sola** (aplica las migraciones) y carga los datos de ejemplo. El usuario de la base necesita permiso para crear tablas.
 
@@ -101,6 +103,7 @@ Una vez online, recorré esto con los tres usuarios de prueba (la pantalla de lo
 - [ ] **Administrador:** crear un tratamiento, ver la auditoría.
 - [ ] **Paciente:** sacar un turno, leer un mensaje, abrir su historia clínica.
 - [ ] **Odontólogo:** marcar un turno como atendido y cargar la historia clínica, tocar una pieza del odontograma, **subir una radiografía**, enviar un aviso a un paciente.
+- [ ] **Asistente (con `Gemini__ApiKey` cargada):** abrir el botón *Consultas*, tocar *¿Qué horarios de atención tienen?* y comprobar que responde con los horarios reales. Si dice que no está disponible, mirar el log del servicio: queda el código HTTP y el motivo que devolvió Google.
 
 Si algo falla, los problemas más comunes son:
 
