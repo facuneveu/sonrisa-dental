@@ -39,7 +39,7 @@ La aplicación no lleva secretos en el código. Todo lo que cambia entre tu máq
 | `PORT` | Puerto en el que escuchar | Lo define el hosting (Render lo hace solo) |
 | `DataProtection__KeysPath` | *(Opcional)* carpeta persistente para las claves de sesión | Ver más abajo |
 | `Gemini__ApiKey` | Clave de la API de IA del asistente virtual. Sin ella el sistema funciona y el chat avisa que no está configurado | Tu clave de [Google AI Studio](https://aistudio.google.com/apikey). **Nunca en el repositorio** |
-| `Gemini__Modelo` | *(Opcional)* fuerza un modelo de Gemini; si no, se prueba la lista de `appsettings.json` | Por ejemplo `gemini-3.8-flash` |
+| `Gemini__Modelo` | *(Opcional)* fuerza un modelo de Gemini; si no, se prueba la lista de `appsettings.json` | Por ejemplo `gemini-3.5-flash-lite` |
 | `Asistente__ConsultasPorMinuto` | *(Opcional)* tope de consultas al chat por persona | `8` por defecto |
 
 Al arrancar, la aplicación **crea las tablas por sí sola** (aplica las migraciones) y carga los datos de ejemplo. El usuario de la base necesita permiso para crear tablas.

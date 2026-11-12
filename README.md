@@ -66,7 +66,7 @@ dotnet user-secrets set "Gemini:ApiKey" "PEGA-TU-CLAVE-ACA"
 
 En un hosting se define la variable de entorno `Gemini__ApiKey`. Sin clave, todo el sistema funciona igual y el chat avisa que todavía no está configurado.
 
-Los modelos se prueban en el orden de `Gemini:Modelos` (`appsettings.json`): Google retira modelos seguido y `gemini-2.5-flash` ya no se ofrece a claves nuevas, así que si uno no existe o no tiene cuota se pasa al siguiente. Se puede forzar uno con `Gemini:Modelo`.
+Los modelos se prueban en el orden de `Gemini:Modelos` (`appsettings.json`): primero el liviano y rápido (`gemini-3.5-flash-lite`). Google retira modelos seguido y `gemini-2.5-flash` ya no se ofrece a claves nuevas, así que si uno no existe, no tiene cuota, está saturado (503) o no contesta en 10 segundos, se pasa al siguiente. Se puede forzar uno con `Gemini:Modelo`.
 
 ### Datos de ejemplo
 
@@ -155,7 +155,7 @@ Dockerfile           imagen para hostings con contenedores
 - [x] **Hito 2** — Base de datos con EF Core, Identity, CRUD principales y auditoría
 - [x] **Hito 3** — Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, y preparación del despliegue (`Dockerfile`, `/healthz`, guía)
 - [ ] **Publicación:** subir a GitHub y publicar en un hosting (requiere tus cuentas; pasos en [`docs/Despliegue.md`](docs/Despliegue.md))
-- [x] **Hito 4 (código)** — Módulo de IA: chat flotante con Gemini, con el contexto armado desde la base. Probado con un Gemini simulado; falta probarlo con tu clave real
+- [x] **Hito 4 (código)** — Módulo de IA: chat flotante con Gemini, con el contexto armado desde la base. Probado con la API real de Google (12/11/2026) y con un Gemini simulado que falla a propósito
 - [ ] **Hito 4 (defensa)** — Ensayar la demo en vivo y las preguntas de código (ver [`docs/Hito4-Asistente-IA.md`](docs/Hito4-Asistente-IA.md))
 
 **URL pública:** _pendiente: completar después de publicar (ver `docs/Despliegue.md`)_

@@ -54,7 +54,7 @@ En producción: variable de entorno `Gemini__ApiKey`. Se obtiene gratis en [Goog
 
 Otros valores (`appsettings.json`, sección `Gemini`): `Modelos` (lista de respaldo), `Modelo` (para forzar uno), `MaxTokensRespuesta`, `TimeoutSegundos`. El tope de consultas se cambia con `Asistente:ConsultasPorMinuto` (8 por defecto).
 
-> **Sobre el modelo.** La guía menciona `gemini-2.5-flash`. Al 06/11/2026 la documentación de Google indica que ese modelo está deprecado y **solo lo conservan quienes ya lo usaban**; para proyectos nuevos recomienda la familia 3.x. Por eso el cliente prueba en orden `gemini-3.8-flash` → `gemini-3.5-flash-lite` → `gemini-2.5-flash`, y pasa al siguiente si uno responde "no existe", "sin acceso" o "sin cuota". Si Google cambia los nombres otra vez, alcanza con editar la lista en `appsettings.json`; no hay que tocar código.
+> **Sobre el modelo.** La guía menciona `gemini-2.5-flash`. Al 06/11/2026 la documentación de Google indica que ese modelo está deprecado y **solo lo conservan quienes ya lo usaban**; para proyectos nuevos recomienda la familia 3.x. Por eso el cliente prueba en orden `gemini-3.5-flash-lite` → `gemini-3.8-flash` → `gemini-2.5-flash`, y pasa al siguiente si uno responde "no existe", "sin acceso" o "sin cuota", o si no contesta a tiempo. El liviano va primero a propósito: en la prueba real del 12/11/2026 respondía en 1 a 3 segundos, mientras que `gemini-3.8-flash` devolvía 503 ("demanda alta") o se colgaba seguido, y `gemini-2.5-flash` respondió 404 para una clave nueva. Si Google cambia los nombres otra vez, alcanza con editar la lista en `appsettings.json`; no hay que tocar código.
 
 ## 4. Decisiones de diseño (para justificar en la defensa)
 
@@ -69,6 +69,7 @@ Otros valores (`appsettings.json`, sección `Gemini`): `Modelos` (lista de respa
 - **Cuota gratuita protegida.** La API gratuita tiene pocas consultas por minuto compartidas por todos. Hay un tope de 8 por minuto **por persona** (`AddRateLimiter` con ventana fija particionada por usuario) y solo pueden usarlo personas con sesión iniciada.
 - **La clave viaja en la cabecera `x-goog-api-key`**, no en la URL, para que no quede en los registros del servidor. Se comprobó que no aparece en el log de la aplicación.
 - **Degradación elegante.** Sin clave, sin conexión, con la cuota agotada o con la respuesta bloqueada, el usuario ve un mensaje claro en español y el resto del sistema sigue funcionando. El detalle técnico queda en el log.
+- **Tiempos de espera y reintento.** Cada modelo tiene un tope de 10 segundos y la consulta completa de 30 (`Gemini:TimeoutPorModeloSegundos` y `Gemini:TimeoutSegundos`). Un 503 se reintenta una vez con el mismo modelo antes de pasar al siguiente, y un modelo que se cuelga se abandona. Surgió de la prueba real: sin esto, un modelo saturado dejaba a la persona esperando 30 segundos para terminar en un error, sin probar el de respaldo.
 - **No se guardan las conversaciones.** Solo se registra que se usó (rol y si salió bien). El historial vive en `sessionStorage` del navegador y se borra al cerrar la pestaña. Así no se agregan tablas ni datos que proteger.
 
 ## 5. Cómo se probó
@@ -80,8 +81,10 @@ Sin gastar cuota ni usar una clave real, con un **servidor Gemini simulado** que
 | Asistente: acceso, antifalsificación, prompt con datos reales y sin datos privados, normalización de la conversación, validaciones, respuestas vacías o bloqueadas, tope por persona (8/min), aviso sin clave | 42/42 + 4/4 + 2/2 |
 | Regresión sobre el resto del sistema (Hito 2: navegación y utilidad; Hito 3: ficha clínica, archivos y mensajes) en la misma versión | 66/66 y 109/109 |
 | Navegador: abrir/cerrar, enviar, atajos, respuesta con lista y negrita, `<script>` mostrado como texto, vista de celular | Verificado a mano |
+| Gemini simulado con fallas: modelo colgado, 503 con reintento, modelo que responde, todos colgados (tope total) | Los 4 escenarios se comportan como se espera (3,6 s con un modelo colgado y otro en 503; corta a los 7 s si todos se cuelgan) |
+| **API real de Google** (clave propia, 12/11/2026): horarios, síntomas, obras sociales, precio real, urgencia, intento de inyección, datos privados, fuera de tema y seguimiento con memoria | 11/11 chequeos; las 10 consultas las respondió `gemini-3.5-flash-lite` en 1 a 3 s, con el precio y la duración iguales a los de la base |
 
-> ⚠️ **Todavía no se probó contra la API real de Google** (hace falta tu clave). Antes de la defensa: cargar la clave, abrir el chat con el usuario paciente y hacer las cuatro preguntas de los atajos. Si responde, quedó. Si dice "no está disponible", mirar el log de la aplicación: ahí queda el código HTTP y el mensaje de Google por cada modelo probado.
+> ✅ **Probado contra la API real de Google el 12/11/2026.** Los modelos de Google se saturan de a ratos (503 "demanda alta"), por eso antes de la defensa conviene repetir lo básico: con la clave cargada, abrir el chat con el usuario paciente y hacer las preguntas de los atajos. Si dice "no está disponible", mirar el log de la aplicación: ahí queda el código HTTP y el mensaje de Google por cada modelo probado.
 
 ## 6. Guion de demo (15 minutos máximo)
 
@@ -101,3 +104,4 @@ Sin gastar cuota ni usar una clave real, con un **servidor Gemini simulado** que
 - **¿Por qué ViewModel acá?** Para definir exactamente qué acepta el endpoint (`PreguntaAsistenteViewModel`), validarlo con anotaciones y que el rol no pueda venir del request.
 - **¿Por qué un límite por minuto?** La cuota gratuita es compartida; sin límite, una persona podría agotarla para todos.
 - **¿Por qué una lista de modelos?** Google retira modelos con frecuencia; con la lista, un cambio no tumba el chat.
+- **¿Qué pasa si Gemini no responde o está saturado?** Cada modelo tiene un tope de 10 segundos y un 503 se reintenta una vez; si sigue fallando se pasa al siguiente modelo, y si todos fallan la persona ve un mensaje en español y el resto del sistema sigue funcionando. Lo comprobamos con la API real y con un Gemini simulado que se cuelga a propósito.

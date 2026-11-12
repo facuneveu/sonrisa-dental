@@ -242,4 +242,4 @@ Se implementó la **Opción A de la guía: chat flotante con Google Gemini** (cu
 | 1 | Tema, DER preliminar, roles | ✅ Este documento |
 | 2 | Base creada con EF Core, Identity configurado, CRUD principales | ✅ Ver `README.md` |
 | 3 | Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, preparación del despliegue | ✅ Ver `README.md` y `docs/Despliegue.md` (falta publicar: requiere tus cuentas) |
-| 4 | Módulo de IA (chat flotante con Gemini), defensa | ✅ Código y pruebas con Gemini simulado · falta probar con tu clave real y ensayar la defensa (ver `docs/Hito4-Asistente-IA.md`) |
+| 4 | Módulo de IA (chat flotante con Gemini), defensa | ✅ Probado con la API real de Gemini y con un Gemini simulado · falta ensayar la defensa (ver `docs/Hito4-Asistente-IA.md`) |
