@@ -37,7 +37,7 @@ La aplicación no lleva secretos en el código. Todo lo que cambia entre tu máq
 | `SeedDatosEjemplo` | Crea los datos y las cuentas de prueba al iniciar | `true` (necesario para que existan las credenciales de la entrega) |
 | `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | Respeta el HTTPS que pone el proxy del hosting | `true` (ya viene en el `Dockerfile`) |
 | `PORT` | Puerto en el que escuchar | Lo define el hosting (Render lo hace solo) |
-| `DataProtection__KeysPath` | *(Opcional)* carpeta persistente para las claves de sesión | Ver más abajo |
+| `DataProtection__KeysPath` | Carpeta persistente para las claves de sesión. **Obligatoria en un hosting compartido de Windows (IIS)**: sin ella el login puede dar error 500 o cerrar la sesión en cada reinicio. Una ruta relativa se toma desde la carpeta de la aplicación | En MonsterASP.NET: `..\private\keys`. En otros hostings, una carpeta que persista |
 | `Gemini__ApiKey` | Clave de la API de IA del asistente virtual. Sin ella el sistema funciona y el chat avisa que no está configurado | Tu clave de [Google AI Studio](https://aistudio.google.com/apikey). **Nunca en el repositorio** |
 | `Gemini__Modelo` | *(Opcional)* fuerza un modelo de Gemini; si no, se prueba la lista de `appsettings.json` | Por ejemplo `gemini-3.5-flash-lite` |
 | `Asistente__ConsultasPorMinuto` | *(Opcional)* tope de consultas al chat por persona | `8` por defecto |
@@ -47,6 +47,37 @@ Al arrancar, la aplicación **crea las tablas por sí sola** (aplica las migraci
 ## 3. Opciones de hosting
 
 La app necesita **SQL Server**. Eso condiciona la elección: no todos los hostings lo ofrecen.
+
+### Opción recomendada — MonsterASP.NET (gratis, con SQL Server)
+
+Plan gratuito y sin tarjeta: 1 sitio (5 GB y 256 MB de RAM), 1 base de datos SQL Server de 1 GB, .NET 8 a 11 y una dirección `TU-SITIO.runasp.net`. Se publica desde Visual Studio con Web Deploy, o por FTP o ZIP. Es la que mejor encaja con este proyecto: SQL Server incluido, variables de entorno desde el panel y .NET 9.
+
+Lo que hay que saber del plan gratuito (según su [comparación de planes](https://help.monsterasp.net/getting-started/first-steps/free-vs-premium)):
+
+- **Se duerme por inactividad** (no tiene *AlwaysRunning*): la primera visita después de un rato tarda. Abrí el sitio unos minutos antes de la defensa.
+- **HTTPS lo activa el soporte, a pedido y después de subir el sitio.** Pedilo con un ticket desde el panel apenas publiques, con tiempo.
+- No envía e-mails (el sistema no los usa), no da garantías y tiene 256 MB de RAM fijos. Para una demo alcanza.
+
+Pasos:
+
+1. Creá la cuenta en [monsterasp.net](https://www.monsterasp.net/ASP.NET-Freehosting/) (plan *Free*). En el panel creá un **sitio** (elegí .NET 9) y una **base de datos MSSQL**.
+2. En *Databases* → tu base → *Users* → *Connection string*, copiá la de **Local access** (la *Remote* es para conectarte desde tu PC). Ver [Find your connection string](https://help.monsterasp.net/databases/mssql/connection-string).
+3. En tu sitio → *Scripting* → [*Environment variables*](https://help.monsterasp.net/websites/configuration/environment-variables) cargá estas variables y tocá *Restart application*:
+
+   | Variable | Valor |
+   |---|---|
+   | `ConnectionStrings__DefaultConnection` | la cadena **Local access** del paso 2 |
+   | `ASPNETCORE_ENVIRONMENT` | `Production` |
+   | `SeedDatosEjemplo` | `true` |
+   | `DataProtection__KeysPath` | `..\private\keys` (la carpeta privada del sitio; [por qué](https://help.monsterasp.net/websites/configuration/data-protection-keys)) |
+   | `Gemini__ApiKey` | tu clave de Google AI Studio |
+
+4. En *Deploy* → *Visual Studio access* activá **WebDeploy** y tocá *Download publish profile* (un archivo `.publishSettings`).
+5. En Visual Studio: clic derecho en el proyecto `ClinicaDental` → **Publicar** → *Importar perfil* → elegí ese archivo → **Publicar**. Detalle en [Deploy from Visual Studio](https://help.monsterasp.net/websites/deploy/visual-studio). Si tu red bloquea el puerto 8172, subí la publicación por FTP.
+6. Abrí `https://TU-SITIO.runasp.net/healthz` (tiene que decir `ok`) y después el sitio. El primer arranque tarda: crea las tablas y los datos de ejemplo.
+7. Abrí un ticket pidiendo el HTTPS y, mientras tanto, recorré la lista de la sección 4.
+
+Si el sitio muestra *HTTP Error 500*, mirá los registros del sitio en el panel: casi siempre es una variable mal copiada (por ejemplo, la cadena de conexión).
 
 ### Opción A — SmarterASP.NET (hosting .NET con SQL Server incluido)
 
