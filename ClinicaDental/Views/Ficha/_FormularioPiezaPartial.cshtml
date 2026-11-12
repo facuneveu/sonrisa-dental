@@ -1,7 +1,7 @@
 @model ClinicaDental.Models.ViewModels.PiezaFormViewModel
 
 <div class="modal-header bg-primary text-white">
-    <h5 class="modal-title text-white">Pieza @Model.NumeroPieza</h5>
+    <h5 class="modal-title text-white">Pieza @Model.NumeroPieza <small class="fw-normal opacity-75">· @Formato.NombrePieza(Model.NumeroPieza)</small></h5>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
 </div>
 

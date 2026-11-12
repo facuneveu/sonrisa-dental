@@ -31,10 +31,11 @@ namespace ClinicaDental.Models.ViewModels
         public List<AdjuntoResumen> Adjuntos { get; set; } = new();
     }
 
-    public class PiezaFormViewModel : IValidatableObject
+    public class PiezaFormViewModel
     {
         public int PacienteId { get; set; }
 
+        [PiezaFdi]
         [Display(Name = "Pieza")]
         public int NumeroPieza { get; set; }
 
@@ -44,15 +45,6 @@ namespace ClinicaDental.Models.ViewModels
         [StringLength(300, ErrorMessage = "Las observaciones no pueden superar los {1} caracteres.")]
         [Display(Name = "Observaciones")]
         public string? Observaciones { get; set; }
-
-        // Numeración FDI: el primer dígito es el cuadrante (1 a 4) y el segundo la pieza (1 a 8).
-        public static bool EsPiezaValida(int numero) => numero / 10 is >= 1 and <= 4 && numero % 10 is >= 1 and <= 8;
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (!EsPiezaValida(NumeroPieza))
-                yield return new ValidationResult("La pieza debe estar entre 11 y 48 (notación FDI).", new[] { nameof(NumeroPieza) });
-        }
     }
 
     public class AdjuntoFormViewModel

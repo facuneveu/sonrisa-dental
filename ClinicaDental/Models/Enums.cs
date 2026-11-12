@@ -11,7 +11,7 @@ namespace ClinicaDental.Models
         Ausente = 4
     }
 
-    // Estados posibles de una pieza en el odontograma (notación FDI, piezas 11 a 48).
+    // Estados posibles de una pieza en el odontograma (notación FDI: las 32 piezas permanentes, 11-18, 21-28, 31-38 y 41-48).
     public enum EstadoPieza
     {
         Sana = 0,

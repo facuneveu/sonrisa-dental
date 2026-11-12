@@ -211,7 +211,7 @@ namespace ClinicaDental.Controllers
         public async Task<IActionResult> FormularioPieza(int pacienteId, int numero)
         {
             if (!await _perfil.PuedeAccederAFichaAsync(pacienteId)) return Forbid();
-            if (!PiezaFormViewModel.EsPiezaValida(numero)) return NotFound();
+            if (!PiezaDental.EsNumeroFdiValido(numero)) return NotFound();
 
             var existente = await _context.PiezasDentales.AsNoTracking()
                 .FirstOrDefaultAsync(p => p.PacienteId == pacienteId && p.NumeroPieza == numero);

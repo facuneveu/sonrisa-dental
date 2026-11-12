@@ -279,7 +279,9 @@ hr { border-color: var(--linea); opacity: 1; }
 .odontograma { display: flex; flex-direction: column; gap: 1.25rem; align-items: center; overflow-x: auto; padding: .25rem; }
 .odontograma .arcada { display: flex; gap: 1rem; }
 .odontograma .arcada + .arcada { padding-top: 1rem; border-top: 2px dashed var(--linea); }
-.odontograma .mitad { display: flex; gap: .3rem; }
+.odontograma .mitad { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
+.odontograma .dientes { display: flex; gap: .3rem; }
+.odontograma .lado { font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--texto-2); font-weight: 600; }
 .diente { width: 2.6rem; height: 3rem; border-radius: 12px 12px 16px 16px; border: 2px solid #9db8bc; background: #fff; color: var(--ink);
   font-weight: 700; font-size: .82rem; display: inline-grid; place-items: center; padding: 0; transition: transform .12s ease, box-shadow .12s ease; }
 button.diente { cursor: pointer; }
@@ -322,11 +324,11 @@ button.diente:hover, button.diente:focus-visible { transform: translateY(-3px); 
   .sidebar .marca small { font-size: .58rem; letter-spacing: .08em; }
   .diente { width: 2.15rem; height: 2.6rem; font-size: .76rem; }
   .odontograma .arcada { gap: .6rem; }
-  .odontograma .mitad { gap: .2rem; }
+  .odontograma .dientes { gap: .2rem; }
 }
 @media (max-width: 991.98px) {
   .diente { width: 1.9rem; height: 2.4rem; font-size: .72rem; }
-  .odontograma .mitad { gap: .15rem; }
+  .odontograma .dientes { gap: .15rem; }
 }
 
 /* ---------- Asistente virtual (chat flotante, Hito 4) ---------- */

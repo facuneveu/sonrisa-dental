@@ -2,7 +2,7 @@
 @{
     var estado = Model.Pieza?.Estado ?? EstadoPieza.Sana;
     var nombre = Formato.NombreEnum(estado);
-    var detalle = $"Pieza {Model.Numero} · {nombre}" + (string.IsNullOrEmpty(Model.Pieza?.Observaciones) ? "" : $" — {Model.Pieza!.Observaciones}");
+    var detalle = $"Pieza {Model.Numero} · {Formato.NombrePieza(Model.Numero).ToLowerInvariant()} · {nombre}" + (string.IsNullOrEmpty(Model.Pieza?.Observaciones) ? "" : $" — {Model.Pieza!.Observaciones}");
 }
 
 @if (Model.Editable)
