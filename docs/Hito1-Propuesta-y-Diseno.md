@@ -199,7 +199,7 @@ Además, todas las entidades menos `LogAuditoria` incluyen los campos de auditor
 | `Turno` | Reserva de un paciente con un odontólogo para un tratamiento, con estado. |
 | `HistoriaClinica` | Registro clínico de una consulta (diagnóstico, procedimiento, indicaciones). |
 | `Adjunto` | Archivo del paciente: radiografía (imagen) o presupuesto / estudio (PDF). Su contenido se guarda en la base. |
-| `PiezaDental` | Estado de una pieza (numeración FDI) en el odontograma del paciente. |
+| `PiezaDental` | Estado de una pieza en el odontograma del paciente. Se usa la numeración FDI de las 32 piezas permanentes (11–18, 21–28, 31–38 y 41–48): el número identifica la pieza, no es una cantidad. |
 | `Mensaje` | Aviso del odontólogo a un paciente ante un inconveniente, opcionalmente ligado a un turno; registra cuándo fue leído. |
 | `LogAuditoria` | Registro de quién creó, modificó o eliminó cada dato, y cuándo. |
 

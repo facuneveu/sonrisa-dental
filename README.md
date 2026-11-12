@@ -99,7 +99,7 @@ La pantalla de inicio de sesión muestra estas cuentas con un botón para comple
 **Odontólogo**
 - Agenda con filtros por período, estado y texto; ve teléfono, obra social y alergias del paciente.
 - Confirmar, marcar como atendido o ausente, y cancelar sus turnos. Al marcar "Atendido" el sistema ofrece cargar la historia clínica en el momento.
-- **Mis pacientes y ficha clínica:** historia clínica por consulta, **odontograma** (32 piezas con numeración FDI, coloreadas según su estado) y **archivos** (radiografías en JPG/PNG/WEBP y estudios o presupuestos en PDF, hasta 5 MB).
+- **Mis pacientes y ficha clínica:** historia clínica por consulta, **odontograma** (32 piezas con numeración FDI, rotuladas por cuadrante y con el nombre de cada pieza, coloreadas según su estado) y **archivos** (radiografías en JPG/PNG/WEBP y estudios o presupuestos en PDF, hasta 5 MB).
 - **Avisar al paciente ante un inconveniente:** desde un turno o desde la ficha, con plantillas según el motivo (demora, reprogramación, cancelación, indicaciones) que se pueden editar. Al cancelar un turno el sistema ofrece avisar en el momento, y el odontólogo ve cuándo el paciente leyó el mensaje.
 - **Mi perfil:** sus horarios de atención, su matrícula y cambio de contraseña.
 
