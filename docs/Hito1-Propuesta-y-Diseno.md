@@ -149,6 +149,7 @@ erDiagram
         blob Contenido
         string TipoContenido
         long TamanoBytes
+        string Descripcion
     }
     PiezaDental {
         int Id PK
