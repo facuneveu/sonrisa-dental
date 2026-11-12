@@ -14,22 +14,17 @@ El proyecto ya está preparado para publicarse. Lo que falta hacer es solo lo qu
 
 ## 1. Subir el código a GitHub
 
-Desde la carpeta raíz del proyecto (la que contiene `ClinicaDental.sln`):
+El repositorio **ya está inicializado** (rama `main`, con el historial por hitos); solo falta conectarlo a GitHub. Creá antes un repositorio **vacío** en tu cuenta (sin README ni `.gitignore`, que ya existen acá) y, desde la carpeta raíz del proyecto (la que contiene `ClinicaDental.sln`):
 
 ```bash
-git init
-git add .
-git commit -m "Sonrisa Dental: hitos 1 a 4"
-git branch -M main
+git status
 git remote add origin https://github.com/TU-USUARIO/sonrisa-dental.git
 git push -u origin main
 ```
 
-Creá antes el repositorio vacío en GitHub (sin README ni .gitignore, que ya existen acá).
+`git status` tiene que decir que no hay nada para confirmar. El `.gitignore` ya excluye `bin/`, `obj/`, secretos y archivos de usuario, y no hay ninguna clave en el historial, pero **revisalo antes del primer `push`** (`git log -p` o `git grep AIza`): la guía remarca que una API key subida a un repositorio público se invalida sola.
 
-El `.gitignore` ya excluye `bin/`, `obj/`, secretos y archivos de usuario. **Revisá que no se haya colado ninguna clave** antes del primer `push`: `git status` y `git diff --cached`. La guía lo remarca: una API key subida a un repositorio público se invalida sola.
-
-> La guía evalúa el historial de commits. Si podés, hacé commits más chicos y con mensajes claros en lugar de uno solo.
+> La guía evalúa el historial de commits. De acá en adelante, hacé commits chicos y con mensajes claros (uno por cambio) en lugar de uno grande.
 
 ## 2. Variables de entorno
 
