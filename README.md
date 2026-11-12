@@ -6,9 +6,16 @@ Los pacientes se registran y reservan turnos eligiendo tratamiento, odontólogo 
 
 > Todos los datos de ejemplo son **ficticios**. No cargues datos reales de personas en este sistema.
 
-📐 Diseño y diagrama de entidad-relación: [`docs/Hito1-Propuesta-y-Diseno.md`](docs/Hito1-Propuesta-y-Diseno.md) · DER como imagen/PDF: [`docs/DER.html`](docs/DER.html)  
+📐 Diseño y diagrama de entidad-relación: [`docs/Hito1-Propuesta-y-Diseno.md`](docs/Hito1-Propuesta-y-Diseno.md) · DER como imagen/PDF: [`docs/DER.html`](docs/DER.html) · [`docs/DER.png`](docs/DER.png)  
+📝 Explicación del DER (la base del modelo, las 16 relaciones y preguntas de defensa): [`docs/Explicacion-DER.docx`](docs/Explicacion-DER.docx)  
 🤖 Cómo funciona el asistente de IA y cómo defenderlo: [`docs/Hito4-Asistente-IA.md`](docs/Hito4-Asistente-IA.md)  
 🚀 Cómo publicarlo y entregarlo: [`docs/Despliegue.md`](docs/Despliegue.md)
+
+## Modelo de datos
+
+12 tablas propias más `Usuario` (la cuenta de ASP.NET Core Identity). `Turno` es la tabla central: une paciente, odontólogo y tratamiento.
+
+![Diagrama de entidad-relación de Sonrisa Dental](docs/DER.png)
 
 ## Tecnologías
 
@@ -126,7 +133,7 @@ ClinicaDental/
 ├── Areas/Identity/  páginas de inicio de sesión, registro y acceso denegado
 └── wwwroot/         CSS, JS (crud-async.js reutilizado por todas las pantallas; clinica.js para mensajes y archivos;
                      asistente.js para el chat flotante)
-docs/                diseño (DER, roles) y guía de despliegue
+docs/                diseño (DER en md, html y png, y su explicación en Word), asistente de IA y guía de despliegue
 Dockerfile           imagen para hostings con contenedores
 ```
 
