@@ -154,8 +154,10 @@ Dockerfile           imagen para hostings con contenedores
 - [x] **Hito 1** — Propuesta y diseño (DER y roles)
 - [x] **Hito 2** — Base de datos con EF Core, Identity, CRUD principales y auditoría
 - [x] **Hito 3** — Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, y preparación del despliegue (`Dockerfile`, `/healthz`, guía)
-- [ ] **Publicación:** subir a GitHub y publicar en un hosting (requiere tus cuentas; pasos en [`docs/Despliegue.md`](docs/Despliegue.md))
+- [x] **Publicación:** código en GitHub y sistema publicado en MonsterASP.NET (plan gratuito), con SQL Server (pasos en [`docs/Despliegue.md`](docs/Despliegue.md))
 - [x] **Hito 4 (código)** — Módulo de IA: chat flotante con Gemini, con el contexto armado desde la base. Probado con la API real de Google (12/11/2026) y con un Gemini simulado que falla a propósito
 - [ ] **Hito 4 (defensa)** — Ensayar la demo en vivo y las preguntas de código (ver [`docs/Hito4-Asistente-IA.md`](docs/Hito4-Asistente-IA.md))
 
-**URL pública:** _pendiente: completar después de publicar (ver `docs/Despliegue.md`)_
+**URL pública:** http://sonrisa-dental.runasp.net
+
+> Está en un hosting gratuito: si nadie lo visitó hace un rato, la primera carga puede tardar un minuto en despertar. Las cuentas de prueba de arriba funcionan en el sitio publicado.
