@@ -80,7 +80,8 @@ builder.Services.AddHttpClient<GeminiClient>((sp, cliente) =>
 {
     var opciones = sp.GetRequiredService<IOptions<GeminiOptions>>().Value;
     cliente.BaseAddress = new Uri(opciones.BaseUrl.EndsWith('/') ? opciones.BaseUrl : opciones.BaseUrl + "/");
-    cliente.Timeout = TimeSpan.FromSeconds(Math.Clamp(opciones.TimeoutSegundos, 5, 120));
+    // Los tiempos de espera los maneja GeminiClient (total y por modelo), así que el HttpClient no corta por su cuenta.
+    cliente.Timeout = Timeout.InfiniteTimeSpan;
 });
 builder.Services.AddScoped<AsistenteService>();
 
