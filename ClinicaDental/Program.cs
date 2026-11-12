@@ -31,11 +31,14 @@ builder.Services.AddAntiforgery(o => o.Cookie.SecurePolicy = CookieSecurePolicy.
 // Las cookies de sesión se firman con unas claves que, por defecto, se guardan en el disco del servidor. Si el
 // hosting borra el disco al reiniciar, todas las sesiones abiertas se pierden. Si la configuración indica una
 // carpeta que persiste (DataProtection__KeysPath), las claves se guardan ahí y las sesiones sobreviven al reinicio.
+// En un hosting compartido de Windows (IIS, como MonsterASP.NET) esto es obligatorio: sin perfil de usuario ni DPAPI las
+// claves quedan solo en memoria y el login falla o se cierra la sesión en cada reinicio. Una ruta relativa se toma desde
+// la carpeta de la aplicación: "..\private\keys" es la carpeta privada del sitio en MonsterASP.NET.
 var rutaClaves = builder.Configuration["DataProtection:KeysPath"];
 if (!string.IsNullOrWhiteSpace(rutaClaves))
 {
     builder.Services.AddDataProtection()
-        .PersistKeysToFileSystem(new DirectoryInfo(rutaClaves))
+        .PersistKeysToFileSystem(new DirectoryInfo(Path.GetFullPath(rutaClaves, builder.Environment.ContentRootPath)))
         .SetApplicationName("ClinicaDental");
 }
 
