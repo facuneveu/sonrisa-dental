@@ -146,15 +146,5 @@ Dockerfile           imagen para hostings con contenedores
 - Sin secretos en el repositorio: la cadena de conexión de producción y la clave de la API de IA van por variables de entorno o `dotnet user-secrets`.
 - **Asistente de IA:** solo para personas con sesión iniciada; token antifalsificación en cada consulta; tope de 8 consultas por minuto por persona (la cuota gratuita es chica y compartida); la conversación se valida y se recorta en el servidor (no se confía en lo que manda el navegador); a Google solo viajan datos públicos de la clínica y el rol, nunca datos de pacientes; la clave viaja en una cabecera y no en la URL; lo que contesta la IA se escapa antes de mostrarse; no se guarda el contenido de las conversaciones.
 
-## Estado del trabajo
-
-- [x] **Hito 1** — Propuesta y diseño (DER y roles)
-- [x] **Hito 2** — Base de datos con EF Core, Identity, CRUD principales y auditoría
-- [x] **Hito 3** — Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, y preparación del despliegue (`Dockerfile`, `/healthz`)
-- [x] **Publicación:** código en GitHub y sistema publicado en MonsterASP.NET (plan gratuito), con SQL Server
-- [x] **Hito 4 (código)** — Módulo de IA: chat flotante con Gemini, con el contexto armado desde la base. Probado con la API real de Google (12/11/2026) y con un Gemini simulado que falla a propósito
-- [ ] **Hito 4 (defensa)** — Ensayar la demo en vivo y las preguntas de código
 
 **URL pública:** http://sonrisa-dental.runasp.net
-
-> Está en un hosting gratuito: si nadie lo visitó hace un rato, la primera carga puede tardar un minuto en despertar. Las cuentas de prueba de arriba funcionan en el sitio publicado.
