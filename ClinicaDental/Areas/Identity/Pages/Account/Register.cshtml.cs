@@ -98,13 +98,14 @@ namespace ClinicaDental.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            ReturnUrl = returnUrl;
+            ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
             await CargarObrasSocialesAsync();
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
+            // Solo se acepta una dirección propia del sitio: cualquier otra se reemplaza por el inicio.
+            if (!Url.IsLocalUrl(returnUrl)) returnUrl = Url.Content("~/");
             ReturnUrl = returnUrl;
 
             if (Input.FechaNacimiento is { } nac && (nac > Reloj.Hoy || nac.Year < 1900))

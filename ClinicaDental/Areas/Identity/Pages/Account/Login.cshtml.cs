@@ -51,13 +51,14 @@ namespace ClinicaDental.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            ReturnUrl = returnUrl ?? Url.Content("~/");
+            // Solo se acepta una dirección propia del sitio: cualquier otra se reemplaza por el inicio.
+            ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Content("~/");
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
+            if (!Url.IsLocalUrl(returnUrl)) returnUrl = Url.Content("~/");
             ReturnUrl = returnUrl;
 
             if (!ModelState.IsValid) return Page();

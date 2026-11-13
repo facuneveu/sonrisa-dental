@@ -19,7 +19,7 @@ namespace ClinicaDental.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
             await _signInManager.SignOutAsync();
-            return returnUrl != null ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home", new { area = "" });
+            return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home", new { area = "" });
         }
     }
 }
