@@ -21,7 +21,7 @@ namespace ClinicaDental.Models
         [Display(Name = "Duración (minutos)")]
         public int DuracionMinutos { get; set; } = 30;
 
-        [Range(0, 10000000, ErrorMessage = "Ingresá un precio válido.")]
+        [Range(typeof(decimal), "0", "10000000", ErrorMessage = "Ingresá un precio válido.")]
         [Display(Name = "Precio")]
         public decimal Precio { get; set; }
 

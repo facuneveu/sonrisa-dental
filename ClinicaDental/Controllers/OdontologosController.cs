@@ -31,6 +31,7 @@ namespace ClinicaDental.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var texto = q.Trim();
+                if (texto.Length > 100) texto = texto[..100];   // un texto enorme no tiene sentido y rompe la consulta
                 consulta = consulta.Where(o => o.Usuario!.Nombre.Contains(texto) || o.Usuario.Apellido.Contains(texto)
                                                || o.Matricula.Contains(texto) || o.Usuario.Email!.Contains(texto));
             }

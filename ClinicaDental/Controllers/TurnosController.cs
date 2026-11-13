@@ -68,6 +68,7 @@ namespace ClinicaDental.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var texto = q.Trim();
+                if (texto.Length > 100) texto = texto[..100];   // un texto enorme no tiene sentido y rompe la consulta
                 consulta = consulta.Where(t => t.Paciente!.Usuario!.Nombre.Contains(texto) || t.Paciente.Usuario.Apellido.Contains(texto)
                                                || t.Odontologo!.Usuario!.Apellido.Contains(texto) || t.Tratamiento!.Nombre.Contains(texto)
                                                || (t.Motivo != null && t.Motivo.Contains(texto)));
@@ -227,6 +228,8 @@ namespace ClinicaDental.Controllers
                 {
                     if (inicio <= Reloj.Ahora)
                         ModelState.AddModelError(nameof(vm.Hora), "El horario elegido ya pasó.");
+                    else if (vm.Fecha!.Value > Reloj.Hoy.AddYears(1))
+                        ModelState.AddModelError(nameof(vm.Fecha), "Solo se pueden reservar turnos con hasta un año de anticipación.");
                     else
                     {
                         var motivo = await _disponibilidad.ValidarAsync(odontologo.Id, inicio, duracion, turno?.Id);
@@ -360,6 +363,10 @@ namespace ClinicaDental.Controllers
             var duracion = await _context.Tratamientos.AsNoTracking()
                 .Where(t => t.Id == tratamientoId).Select(t => (int?)t.DuracionMinutos).FirstOrDefaultAsync();
             if (duracion == null) return NotFound();
+
+            // Más allá de un año no se dan turnos (y una fecha absurda como 9999-12-31 desbordaba los cálculos de fechas).
+            if (fecha > Reloj.Hoy.AddYears(1))
+                return Json(new { horarios = Array.Empty<string>() });
 
             var libres = await _disponibilidad.HorariosLibresAsync(odontologoId, fecha, duracion.Value, turnoId == 0 ? null : turnoId);
             return Json(new { horarios = libres.Select(h => h.ToString("HH:mm")) });
