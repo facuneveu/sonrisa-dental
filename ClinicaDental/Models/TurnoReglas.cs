@@ -1,6 +1,5 @@
 namespace ClinicaDental.Models
 {
-    // Qué cambios de estado son válidos. Un turno atendido, cancelado o ausente queda cerrado.
     public static class TurnoReglas
     {
         public static IReadOnlyList<EstadoTurno> Siguientes(EstadoTurno actual) => actual switch
@@ -12,7 +11,6 @@ namespace ClinicaDental.Models
 
         public static bool PuedeCambiar(EstadoTurno actual, EstadoTurno nuevo) => Siguientes(actual).Contains(nuevo);
 
-        // El paciente solo puede cancelar, y únicamente un turno que todavía no pasó.
         public static bool PacientePuedeCancelar(Turno turno, DateTime ahora) =>
             turno.FechaHora > ahora && PuedeCambiar(turno.Estado, EstadoTurno.Cancelado);
 

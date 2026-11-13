@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ClinicaDental.Services
 {
-    // Identity devuelve sus errores en inglés. Esto los traduce para que el usuario vea mensajes claros.
     public class IdentityErrorDescriberEs : IdentityErrorDescriber
     {
         public override IdentityError DefaultError() => new() { Code = nameof(DefaultError), Description = "Ocurrió un error inesperado." };

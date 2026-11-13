@@ -5,19 +5,13 @@ using Microsoft.Extensions.Options;
 
 namespace ClinicaDental.Services
 {
-    // Un mensaje de la conversación. Rol: "user" (la persona) o "model" (el asistente), como lo pide la API.
     public record MensajeChat(string Rol, string Texto);
 
-    // Resultado de una consulta. Cuando Ok es false, Texto es un mensaje en español listo para mostrarle a la persona
-    // (el detalle técnico queda en el registro del servidor, nunca en pantalla).
     public record RespuestaIA(bool Ok, string Texto, string? Modelo = null)
     {
         public static RespuestaIA Error(string mensaje) => new(false, mensaje);
     }
 
-    // Cliente de la API REST de Google Gemini con HttpClient (sin paquetes extra).
-    //   POST {BaseUrl}v1beta/models/{modelo}:generateContent
-    //   La clave viaja en la cabecera x-goog-api-key y no en la URL, para que no aparezca en los registros.
     public class GeminiClient
     {
         private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -48,8 +42,6 @@ namespace ClinicaDental.Services
                 generationConfig = new { maxOutputTokens = _opciones.MaxTokensRespuesta }
             }, Json);
 
-            // Dos topes de espera: uno para toda la consulta y otro para cada modelo. Un modelo que se cuelga no tiene que
-            // dejar a la persona esperando: se lo abandona y se prueba con el siguiente de la lista.
             using var total = CancellationTokenSource.CreateLinkedTokenSource(ct);
             total.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(_opciones.TimeoutSegundos, 5, 120)));
             var porModelo = TimeSpan.FromSeconds(Math.Clamp(_opciones.TimeoutPorModeloSegundos, 2, 120));
@@ -59,8 +51,6 @@ namespace ClinicaDental.Services
 
             foreach (var modelo in _opciones.ModelosEnOrden())
             {
-                // Un 503 ("demanda alta") suele ser una ráfaga de un instante: se reintenta el mismo modelo una vez antes de
-                // pasar al siguiente (en las pruebas reales el reintento respondió en 1 s).
                 for (var vez = 1; vez <= IntentosPorModelo; vez++)
                 {
                     if (total.IsCancellationRequested) break;
@@ -84,30 +74,25 @@ namespace ClinicaDental.Services
                         {
                             var resultado = Interpretar(texto, modelo);
                             if (resultado != null) return resultado;
-                            break; // respuesta vacía: se prueba con el modelo siguiente
+                            break;
                         }
 
                         _log.LogWarning("Gemini ({Modelo}) respondió {Estado}: {Detalle}", modelo, (int)respuesta.StatusCode, Recortar(texto, 300));
 
-                        // La clave mala no mejora cambiando de modelo.
                         if (respuesta.StatusCode == HttpStatusCode.Unauthorized
                             || (respuesta.StatusCode == HttpStatusCode.BadRequest && texto.Contains("API_KEY_INVALID", StringComparison.Ordinal)))
                             return RespuestaIA.Error("La clave del asistente no es válida. Avisale a la administración de la clínica.");
 
-                        // Error pasajero del servidor de Google: un segundo intento enseguida con el mismo modelo.
                         if (EsPasajero(respuesta.StatusCode) && vez < IntentosPorModelo)
                         {
                             await Task.Delay(400, total.Token);
                             continue;
                         }
 
-                        // 400 / 403 / 404 / 429 / 5xx: el modelo no existe, no está disponible para esta clave, no tiene cuota
-                        // o sigue con demasiada demanda. Se prueba con el siguiente.
                         break;
                     }
                     catch (OperationCanceledException) when (!ct.IsCancellationRequested)
                     {
-                        // Pasó el tiempo de este modelo (o el total de la consulta): no se muestra nada técnico.
                         _log.LogWarning("Gemini ({Modelo}) no respondió a tiempo ({Segundos} s por modelo): se prueba con el siguiente.",
                             modelo, (int)porModelo.TotalSeconds);
                         huboDemora = true;
@@ -129,7 +114,6 @@ namespace ClinicaDental.Services
                 : RespuestaIA.Error("El asistente no está disponible en este momento. Probá de nuevo más tarde.");
         }
 
-        // Devuelve null si la respuesta no trae texto utilizable (para probar con otro modelo).
         private RespuestaIA? Interpretar(string json, string modelo)
         {
             try
@@ -150,7 +134,6 @@ namespace ClinicaDental.Services
                 {
                     foreach (var parte in partes.EnumerateArray())
                     {
-                        // Los modelos con razonamiento pueden devolver su "pensamiento" marcado aparte: no se muestra.
                         if (parte.TryGetProperty("thought", out var pensamiento) && pensamiento.ValueKind == JsonValueKind.True) continue;
                         if (parte.TryGetProperty("text", out var t) && t.ValueKind == JsonValueKind.String) sb.Append(t.GetString());
                     }
@@ -174,7 +157,6 @@ namespace ClinicaDental.Services
 
         private const int IntentosPorModelo = 2;
 
-        // 500, 502, 503 y 504: fallas del lado de Google que suelen resolverse solas.
         private static bool EsPasajero(HttpStatusCode estado) =>
             estado is HttpStatusCode.InternalServerError or HttpStatusCode.BadGateway
                 or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout;

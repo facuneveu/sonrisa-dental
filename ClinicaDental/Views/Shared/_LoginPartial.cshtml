@@ -3,7 +3,6 @@
 @inject SignInManager<Usuario> SignInManager
 @inject UserManager<Usuario> UserManager
 
-@* Pie de la barra lateral: usuario actual y cierre de sesión (solo con sesión iniciada). *@
 @if (SignInManager.IsSignedIn(User))
 {
     var u = await UserManager.GetUserAsync(User);

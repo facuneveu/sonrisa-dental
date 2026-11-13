@@ -6,8 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Controllers
 {
-    // Directorio de solo lectura: quiénes atienden, cuándo, y qué tratamientos hacen.
-    // La administración de los odontólogos está en OdontologosController.
     [Authorize]
     public class ProfesionalesController : Controller
     {
@@ -17,7 +15,6 @@ namespace ClinicaDental.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Solo los que hoy pueden recibir turnos: cuenta activa y al menos un horario cargado.
             var profesionales = await _context.Odontologos.AsNoTracking()
                 .Include(o => o.Usuario).Include(o => o.Especialidad).Include(o => o.Horarios)
                 .Where(o => o.Usuario!.Activo && o.Horarios.Any())

@@ -35,8 +35,6 @@ namespace ClinicaDental.Data
         {
             base.OnModelCreating(builder);
 
-            // Regla general: nada se borra en cascada. Si algo tiene datos asociados, el controlador
-            // lo informa; así nunca se pierde una historia clínica por borrar un catálogo.
             builder.Entity<Usuario>().HasIndex(u => u.Dni).IsUnique();
 
             builder.Entity<Especialidad>().HasIndex(e => e.Nombre).IsUnique();
@@ -58,7 +56,6 @@ namespace ClinicaDental.Data
                 e.HasIndex(o => o.Matricula).IsUnique();
             });
 
-            // Los horarios sí son parte del odontólogo: se borran junto con él.
             builder.Entity<HorarioAtencion>()
                 .HasOne(h => h.Odontologo).WithMany(o => o.Horarios)
                 .HasForeignKey(h => h.OdontologoId).OnDelete(DeleteBehavior.Cascade);
@@ -77,8 +74,6 @@ namespace ClinicaDental.Data
                 e.HasOne(t => t.Odontologo).WithMany(o => o.Turnos).HasForeignKey(t => t.OdontologoId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(t => t.Tratamiento).WithMany().HasForeignKey(t => t.TratamientoId).OnDelete(DeleteBehavior.Restrict);
 
-                // Red de seguridad contra la doble reserva: aunque dos personas confirmen al mismo
-                // tiempo, la base rechaza al segundo. 3 = EstadoTurno.Cancelado (un turno cancelado libera el horario).
                 e.HasIndex(t => new { t.OdontologoId, t.FechaHora })
                     .IsUnique()
                     .HasFilter("[Estado] <> 3");
@@ -106,7 +101,6 @@ namespace ClinicaDental.Data
             {
                 e.HasOne(m => m.Odontologo).WithMany().HasForeignKey(m => m.OdontologoId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(m => m.Paciente).WithMany().HasForeignKey(m => m.PacienteId).OnDelete(DeleteBehavior.Restrict);
-                // Si se elimina el turno, el aviso se conserva pero deja de estar asociado a él.
                 e.HasOne(m => m.Turno).WithMany().HasForeignKey(m => m.TurnoId).OnDelete(DeleteBehavior.SetNull);
                 e.HasIndex(m => new { m.PacienteId, m.FechaEnvio });
             });
@@ -118,13 +112,6 @@ namespace ClinicaDental.Data
             });
         }
 
-        // ------------------------------------------------------------------------------------
-        // Auditoría. Dos niveles:
-        //  1) Campos "creado por / modificado por" en cada AuditableEntity (se ven en las tablas).
-        //  2) Una fila en LogAuditoria por cada alta, cambio y baja (con el detalle de qué cambió).
-        // Todo se hace acá, en SaveChanges, para que ningún controlador pueda olvidarse de auditar.
-        // ------------------------------------------------------------------------------------
-
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
             AplicarAuditoria();
@@ -132,7 +119,6 @@ namespace ClinicaDental.Data
             if (cambios.Count == 0)
                 return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
 
-            // Cambio y registro de auditoría van en la misma transacción (salvo que el llamador ya abrió una).
             await using var propia = Database.CurrentTransaction == null
                 ? await Database.BeginTransactionAsync(cancellationToken) : null;
 
@@ -180,7 +166,6 @@ namespace ClinicaDental.Data
                         break;
 
                     case EntityState.Modified:
-                        // Un formulario no puede alterar quién y cuándo creó el registro.
                         entrada.Property(e => e.FechaCreacion).IsModified = false;
                         entrada.Property(e => e.UsuarioCreacionId).IsModified = false;
                         entrada.Entity.FechaModificacion = ahora;
@@ -205,8 +190,6 @@ namespace ClinicaDental.Data
             nameof(AuditableEntity.FechaModificacion), nameof(AuditableEntity.UsuarioModificacionId)
         };
 
-        // Se toma "la foto" ANTES de guardar: después de SaveChanges los estados ya se reiniciaron
-        // y no se podría saber qué se creó, qué se cambió y qué se borró.
         private List<CambioPendiente> CapturarCambios()
         {
             var lista = new List<CambioPendiente>();
@@ -215,8 +198,6 @@ namespace ClinicaDental.Data
             {
                 if (entrada.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)) continue;
 
-                // Historia clínica, mensajes y archivos: se audita que ocurrió y quién lo hizo, no el contenido
-                // (el registro de auditoría lo lee la administración, que no tiene acceso a la ficha clínica).
                 var reservado = Attribute.IsDefined(entrada.Metadata.ClrType, typeof(ReservadoEnAuditoriaAttribute));
                 const string contenidoReservado = "(contenido reservado)";
 
@@ -233,7 +214,6 @@ namespace ClinicaDental.Data
                     Accion = accion,
                     Entidad = entrada.Metadata.ClrType.Name,
                     Detalle = Recortar(detalle, 2000),
-                    // En un alta la clave todavía es provisoria; se lee recién después de guardar.
                     Clave = entrada.State == EntityState.Added ? null : ClaveDe(entrada)
                 });
             }

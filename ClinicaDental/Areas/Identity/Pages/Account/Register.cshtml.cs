@@ -12,8 +12,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Areas.Identity.Pages.Account
 {
-    // Autoregistro: cualquier persona puede crear su cuenta, y siempre queda como Paciente.
-    // Los odontólogos y administradores los da de alta la administración.
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<Usuario> _signInManager;
@@ -104,7 +102,6 @@ namespace ClinicaDental.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            // Solo se acepta una dirección propia del sitio: cualquier otra se reemplaza por el inicio.
             if (!Url.IsLocalUrl(returnUrl)) returnUrl = Url.Content("~/");
             ReturnUrl = returnUrl;
 
@@ -130,7 +127,6 @@ namespace ClinicaDental.Areas.Identity.Pages.Account
                     Activo = true
                 };
 
-                // La cuenta y el perfil de paciente se crean juntos o no se crea ninguno.
                 await using var transaccion = await _context.Database.BeginTransactionAsync();
 
                 var resultado = await _userManager.CreateAsync(usuario, Input.Password);

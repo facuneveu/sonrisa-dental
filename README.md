@@ -131,7 +131,6 @@ ClinicaDental/
 └── wwwroot/         CSS, JS (crud-async.js reutilizado por todas las pantallas; clinica.js para mensajes y archivos;
                      asistente.js para el chat flotante)
 docs/                diagrama de entidad-relación (DER.png)
-Dockerfile           imagen para hostings con contenedores
 ```
 
 ## Seguridad

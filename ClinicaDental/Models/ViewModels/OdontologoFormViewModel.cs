@@ -2,9 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ClinicaDental.Models.ViewModels
 {
-    // El formulario de odontólogo mezcla datos de DOS tablas (la cuenta Usuario y el perfil Odontologo)
-    // más una contraseña que no se guarda tal cual en ninguna. Por eso no se puede enlazar directo a una
-    // entidad: el ViewModel define exactamente qué campos acepta el formulario (y evita el "overposting").
     public class OdontologoFormViewModel
     {
         public int Id { get; set; }
@@ -48,7 +45,6 @@ namespace ClinicaDental.Models.ViewModels
         [Display(Name = "Presentación")]
         public string? Presentacion { get; set; }
 
-        // Solo se pide al crear. La política (largo, número) la valida Identity.
         [DataType(DataType.Password)]
         [Display(Name = "Contraseña inicial")]
         public string? Password { get; set; }

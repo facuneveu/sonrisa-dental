@@ -3,8 +3,6 @@ using ClinicaDental.Services;
 
 namespace ClinicaDental.Models.ViewModels
 {
-    // Lo que acepta el endpoint del asistente: solo la conversación. El rol de quien pregunta sale de la sesión,
-    // no del request, para que nadie pueda pedir "como administrador".
     public class PreguntaAsistenteViewModel
     {
         [Required(ErrorMessage = "Escribí tu consulta.")]

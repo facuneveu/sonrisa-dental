@@ -1,6 +1,3 @@
-// Chat flotante del asistente virtual. JavaScript puro (no depende de jQuery ni de Bootstrap).
-//   - Manda la conversación a POST /Asistente/Preguntar con el token antifalsificación en la cabecera.
-//   - La conversación se guarda en sessionStorage para que sobreviva al cambiar de pantalla; se borra al cerrar la pestaña.
 (function () {
     const raiz = document.getElementById('asistente');
     if (!raiz) return;
@@ -22,23 +19,18 @@
     let mensajes = cargar();
     let esperando = false;
 
-    // ----- Persistencia (puede no estar disponible: se ignora el error) -----
     function cargar() {
         try {
             const guardado = JSON.parse(sessionStorage.getItem(CLAVE) || 'null');
-            // Si en esta pestaña inició sesión otra persona, no se muestra la conversación anterior.
             if (guardado && guardado.usuario === raiz.dataset.usuario && Array.isArray(guardado.mensajes)) return guardado.mensajes;
-        } catch (e) { /* sin almacenamiento */ }
+        } catch (e) { }
         return [];
     }
 
     function guardar() {
-        try { sessionStorage.setItem(CLAVE, JSON.stringify({ usuario: raiz.dataset.usuario, mensajes })); } catch (e) { /* sin almacenamiento */ }
+        try { sessionStorage.setItem(CLAVE, JSON.stringify({ usuario: raiz.dataset.usuario, mensajes })); } catch (e) { }
     }
 
-    // ----- Dibujo -----
-    // El texto del asistente se escapa primero y recién después se le agregan etiquetas propias (negritas y listas),
-    // así nada de lo que llegue de la API puede inyectar HTML.
     function escapar(s) {
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
@@ -80,7 +72,6 @@
         sugerencias.hidden = mensajes.length > 0;
     }
 
-    // ----- Abrir y cerrar -----
     function abrir() {
         panel.hidden = false;
         boton.setAttribute('aria-expanded', 'true');
@@ -113,10 +104,8 @@
         if (chip) preguntar(chip.textContent.trim());
     });
 
-    // ----- Envío -----
     function ajustarAltura() {
         texto.style.height = 'auto';
-        // +2: el alto incluye el borde (box-sizing: border-box) y sin eso aparecían flechas de scroll de más.
         texto.style.height = Math.min(texto.scrollHeight + 2, 110) + 'px';
         texto.style.overflowY = texto.scrollHeight + 2 > 110 ? 'auto' : 'hidden';
     }
@@ -181,7 +170,6 @@
             mensajes.push({ rol: 'model', texto: respuesta });
             mensajes = mensajes.slice(-MAX_MENSAJES);
         } else {
-            // Si falló, la pregunta sale del historial y vuelve al cuadro de texto para reintentar sin duplicarla.
             mensajes.pop();
             burbujaPropia.remove();
             texto.value = pregunta;

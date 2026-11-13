@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace ClinicaDental.Models
 {
-    // Franja en la que un odontólogo atiende un día de la semana (puede haber varias por día: mañana y tarde).
     public class HorarioAtencion : AuditableEntity
     {
         public int Id { get; set; }

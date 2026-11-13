@@ -6,14 +6,9 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace ClinicaDental.Services
 {
-    // Asistente virtual de la clínica ("Sonri"). Arma las instrucciones (System Prompt) con datos reales de la base y se
-    // las manda a Gemini junto con la conversación.
-    //
-    // Qué datos salen hacia Google: solo información pública de la clínica (profesionales, horarios, tratamientos,
-    // precios y obras sociales) y el rol de quien pregunta. Nunca nombres de pacientes, turnos ni historia clínica.
     public class AsistenteService
     {
-        public const int MaxMensajes = 12;          // turnos de conversación que se reenvían como contexto
+        public const int MaxMensajes = 12;
         public const int MaxCaracteresMensaje = 800;
 
         private const string ClaveCache = "asistente-datos-clinica";
@@ -38,7 +33,6 @@ namespace ClinicaDental.Services
             if (!_gemini.Configurado)
                 return RespuestaIA.Error("El asistente todavía no está configurado. Avisale a la administración de la clínica.");
 
-            // Los datos de la clínica cambian poco: se leen de la base como máximo una vez cada 5 minutos.
             var datos = await _cache.GetOrCreateAsync(ClaveCache, async entrada =>
             {
                 entrada.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
@@ -48,8 +42,6 @@ namespace ClinicaDental.Services
             return await _gemini.GenerarAsync(ArmarInstrucciones(datos, rol, Reloj.Ahora), mensajes, ct);
         }
 
-        // La conversación llega del navegador, así que no se confía en ella: se descartan roles raros, se recorta lo
-        // largo, se junta lo consecutivo del mismo rol y se exige que empiece con la persona hablando.
         public static List<MensajeChat> Normalizar(IEnumerable<MensajeChat> conversacion)
         {
             var resultado = new List<MensajeChat>();
@@ -74,8 +66,6 @@ namespace ClinicaDental.Services
             }
             return resultado;
         }
-
-        // ------------------------------------------------------------------ Datos reales de la base
 
         private async Task<string> ArmarDatosDeLaClinicaAsync()
         {
@@ -128,8 +118,6 @@ namespace ClinicaDental.Services
 
             return sb.ToString();
         }
-
-        // ------------------------------------------------------------------ System Prompt
 
         public static string ArmarInstrucciones(string datosDeLaClinica, string rol, DateTime ahora)
         {

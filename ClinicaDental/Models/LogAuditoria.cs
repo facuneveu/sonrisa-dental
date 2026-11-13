@@ -2,8 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ClinicaDental.Models
 {
-    // Quién hizo qué y cuándo. Guarda copia del nombre de usuario (no una FK) para que el
-    // registro siga siendo legible aunque la cuenta se elimine.
     public class LogAuditoria
     {
         public long Id { get; set; }

@@ -31,7 +31,7 @@ namespace ClinicaDental.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var texto = q.Trim();
-                if (texto.Length > 100) texto = texto[..100];   // un texto enorme no tiene sentido y rompe la consulta
+                if (texto.Length > 100) texto = texto[..100];
                 consulta = consulta.Where(o => o.Usuario!.Nombre.Contains(texto) || o.Usuario.Apellido.Contains(texto)
                                                || o.Matricula.Contains(texto) || o.Usuario.Email!.Contains(texto));
             }
@@ -113,7 +113,6 @@ namespace ClinicaDental.Controllers
 
             if (!ModelState.IsValid) return await FormularioConErroresAsync(vm);
 
-            // Cuenta y perfil se guardan juntos: si algo falla, no queda un usuario sin perfil.
             await using var transaccion = await _context.Database.BeginTransactionAsync();
 
             if (esNuevo)
@@ -157,7 +156,6 @@ namespace ClinicaDental.Controllers
                 odontologo.EspecialidadId = vm.EspecialidadId;
                 odontologo.Presentacion = vm.Presentacion;
 
-                // UpdateAsync también guarda los cambios pendientes del perfil (mismo DbContext).
                 var resultado = await _userManager.UpdateAsync(usuario);
                 if (!resultado.Succeeded)
                 {
@@ -165,7 +163,6 @@ namespace ClinicaDental.Controllers
                     return await FormularioConErroresAsync(vm);
                 }
 
-                // Cambiar el sello de seguridad invalida las sesiones ya abiertas de esa cuenta.
                 if (seDesactiva) await _userManager.UpdateSecurityStampAsync(usuario);
             }
 
@@ -193,17 +190,13 @@ namespace ClinicaDental.Controllers
             await using var transaccion = await _context.Database.BeginTransactionAsync();
 
             var usuario = odontologo.Usuario!;
-            _context.Odontologos.Remove(odontologo);   // sus horarios se eliminan en cascada
+            _context.Odontologos.Remove(odontologo);
             await _context.SaveChangesAsync();
             await _userManager.DeleteAsync(usuario);
 
             await transaccion.CommitAsync();
             return Json(new { success = true, mensaje = "Odontólogo eliminado correctamente." });
         }
-
-        // ---------------------------------------------------------------------------------------
-        // Horarios de atención (se administran desde un modal propio de cada odontólogo)
-        // ---------------------------------------------------------------------------------------
 
         [HttpGet]
         public async Task<IActionResult> Horarios(int id)
@@ -256,7 +249,6 @@ namespace ClinicaDental.Controllers
             if (horario == null)
                 return Json(new { success = false, mensaje = "El horario no existe." });
 
-            // No se puede quitar una franja si hay turnos futuros que dependen de ella.
             var futuros = await _context.Turnos.AsNoTracking()
                 .Where(t => t.OdontologoId == horario.OdontologoId && t.FechaHora >= Reloj.Ahora && t.Estado != EstadoTurno.Cancelado)
                 .Select(t => t.FechaHora).ToListAsync();

@@ -30,7 +30,6 @@ namespace ClinicaDental.Areas.Identity.Pages.Account
 
         public string ReturnUrl { get; set; }
 
-        // Las cuentas de prueba solo se muestran mientras la base tenga datos de ejemplo.
         public bool MostrarCuentasDemo => _config.GetValue("SeedDatosEjemplo", true);
 
         public class InputModel
@@ -51,7 +50,6 @@ namespace ClinicaDental.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            // Solo se acepta una dirección propia del sitio: cualquier otra se reemplaza por el inicio.
             ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Content("~/");
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
@@ -63,8 +61,6 @@ namespace ClinicaDental.Areas.Identity.Pages.Account
 
             if (!ModelState.IsValid) return Page();
 
-            // Solo se avisa que la cuenta está desactivada si la contraseña es correcta; si no, cualquiera podría
-            // averiguar qué correos están registrados probando direcciones.
             var usuario = await _userManager.FindByEmailAsync(Input.Email);
             if (usuario != null && !usuario.Activo && await _userManager.CheckPasswordAsync(usuario, Input.Password))
             {

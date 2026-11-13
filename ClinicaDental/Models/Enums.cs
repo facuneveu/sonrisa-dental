@@ -11,7 +11,6 @@ namespace ClinicaDental.Models
         Ausente = 4
     }
 
-    // Estados posibles de una pieza en el odontograma (notación FDI: las 32 piezas permanentes, 11-18, 21-28, 31-38 y 41-48).
     public enum EstadoPieza
     {
         Sana = 0,
@@ -35,7 +34,6 @@ namespace ClinicaDental.Models
 
 namespace ClinicaDental.Models
 {
-    // Motivo del aviso del odontólogo al paciente. Sirve para elegir una plantilla y para ordenar los mensajes.
     public enum TipoMensaje
     {
         Demora = 0,

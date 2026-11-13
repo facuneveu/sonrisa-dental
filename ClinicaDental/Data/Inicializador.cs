@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ClinicaDental.Data
 {
-    // Lo mínimo para poder usar el sistema: los roles y una cuenta de administrador.
     public static class Inicializador
     {
         public const string AdminEmail = "admin@clinica.com";

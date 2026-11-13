@@ -21,7 +21,7 @@ namespace ClinicaDental.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var texto = q.Trim();
-                if (texto.Length > 100) texto = texto[..100];   // un texto enorme no tiene sentido y rompe la consulta
+                if (texto.Length > 100) texto = texto[..100];
                 consulta = consulta.Where(e => e.Nombre.Contains(texto) || (e.Descripcion != null && e.Descripcion.Contains(texto)));
             }
 
@@ -66,7 +66,6 @@ namespace ClinicaDental.Controllers
             }
             else
             {
-                // Se copian solo los campos editables: el resto (auditoría, colecciones) no se toca.
                 existente.Nombre = nombre;
                 existente.Descripcion = modelo.Descripcion;
             }

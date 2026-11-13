@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Services
 {
-    // Resuelve "¿qué odontólogo / paciente es el usuario logueado?". Se consulta una sola vez por request.
     public class PerfilService
     {
         private readonly ApplicationDbContext _context;
@@ -20,10 +19,6 @@ namespace ClinicaDental.Services
 
         public string? UsuarioId => _http.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // Regla de acceso a la ficha clínica de un paciente (historia, odontograma y archivos):
-        //   paciente   -> solo la propia
-        //   odontólogo -> solo pacientes con los que tiene (o tuvo) al menos un turno
-        //   administración -> ninguna: gestiona turnos y personas, pero no ve contenido clínico
         public async Task<bool> PuedeAccederAFichaAsync(int pacienteId)
         {
             var usuario = _http.HttpContext?.User;

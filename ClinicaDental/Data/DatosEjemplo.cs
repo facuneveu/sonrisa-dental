@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Data
 {
-    // Datos ficticios para poder probar y mostrar el sistema desde el primer arranque.
-    // Se desactivan con "SeedDatosEjemplo": false en appsettings.
     public static class DatosEjemplo
     {
         public const string ClaveOdontologos = "Odonto123!";
@@ -19,7 +17,6 @@ namespace ClinicaDental.Data
 
             var userManager = services.GetRequiredService<UserManager<Usuario>>();
 
-            // ---------- Catálogos ----------
             var general = new Especialidad { Nombre = "Odontología general", Descripcion = "Consultas, limpiezas, arreglos y prevención." };
             var ortodoncia = new Especialidad { Nombre = "Ortodoncia", Descripcion = "Corrección de la posición de dientes y mandíbulas." };
             var endodoncia = new Especialidad { Nombre = "Endodoncia", Descripcion = "Tratamientos de conducto y dolor dental." };
@@ -53,7 +50,6 @@ namespace ClinicaDental.Data
             context.Tratamientos.AddRange(consulta, limpieza, obturacion, extraccion, blanqueamiento, controlOrto, brackets,
                 conducto, reconducto, controlNinos, sellador, evalImplante, implante);
 
-            // ---------- Odontólogos ----------
             async Task<Odontologo> Od(string email, string nombre, string apellido, int dni, string tel, string matricula, Especialidad esp, string presentacion)
             {
                 var u = await CrearUsuarioAsync(userManager, email, nombre, apellido, dni, tel, Roles.Odontologo, ClaveOdontologos);
@@ -84,7 +80,6 @@ namespace ClinicaDental.Data
             H(valeria, 9, 13, DayOfWeek.Thursday, DayOfWeek.Saturday);
             context.HorariosAtencion.AddRange(horarios);
 
-            // ---------- Pacientes ----------
             async Task<Paciente> Pa(string email, string nombre, string apellido, int dni, string tel, DateOnly nac, ObraSocial? os, string? afiliado, string? alergias)
             {
                 var u = await CrearUsuarioAsync(userManager, email, nombre, apellido, dni, tel, Roles.Paciente, ClavePacientes);
@@ -104,9 +99,6 @@ namespace ClinicaDental.Data
             var agustina = await Pa("agustina.silva@correo.test", "Agustina", "Silva", 36555666, "351-555-0305", new DateOnly(1991, 6, 18), saludPlena, "SP-771034", null);
             await context.SaveChangesAsync();
 
-            // ---------- Turnos ----------
-            // Se ubican en la primera franja disponible a partir de una fecha, para que siempre caigan en
-            // días y horas en que el odontólogo realmente atiende (sin importar cuándo se siembre la base).
             DateTime? Hueco(Odontologo o, int diasDesdeHoy, int indice, int duracion)
             {
                 var desde = Reloj.Hoy.AddDays(diasDesdeHoy);
@@ -151,7 +143,6 @@ namespace ClinicaDental.Data
             Tu(agustina, valeria, evalImplante, EstadoTurno.Pendiente, 3, 0, "Consulta por pieza ausente");
             await context.SaveChangesAsync();
 
-            // ---------- Historias clínicas y odontograma de ejemplo ----------
             if (t1 != null)
                 context.HistoriasClinicas.Add(new HistoriaClinica
                 {
@@ -171,7 +162,6 @@ namespace ClinicaDental.Data
 
             await context.SaveChangesAsync();
 
-            // ---------- Archivos y mensajes de ejemplo ----------
             var radiografia = ArchivosDeEjemplo.RadiografiaPng();
             var presupuesto = ArchivosDeEjemplo.PresupuestoPdf("Presupuesto de tratamiento", new[]
             {
@@ -199,7 +189,6 @@ namespace ClinicaDental.Data
                     TamanoBytes = presupuesto.Length, Contenido = presupuesto, Descripcion = "Presupuesto para la corona de la pieza 36"
                 });
 
-            // Un aviso ya leído y uno sin leer (para ver el contador y el aviso en el inicio de la paciente de prueba).
             context.Mensajes.AddRange(
                 new Mensaje
                 {

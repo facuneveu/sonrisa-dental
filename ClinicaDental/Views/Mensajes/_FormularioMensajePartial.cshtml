@@ -16,7 +16,6 @@
 
         @if (conTurno)
         {
-            @* Se abrió desde un turno: paciente y turno ya están definidos. *@
             <input type="hidden" asp-for="PacienteId" />
             <input type="hidden" asp-for="TurnoId" />
             <div class="alert alert-info py-2">

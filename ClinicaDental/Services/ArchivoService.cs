@@ -4,9 +4,6 @@ namespace ClinicaDental.Services
 {
     public record ArchivoValidado(bool Ok, string? Error, byte[] Contenido, string TipoContenido, string NombreOriginal);
 
-    // Valida los archivos que sube el odontólogo (radiografías y estudios). No confía en nada de lo que declara el
-    // navegador: el tipo se decide por la extensión permitida Y se comprueba contra los primeros bytes del archivo,
-    // así un ejecutable renombrado a ".png" no entra. El nombre original solo se guarda para mostrarlo.
     public class ArchivoService
     {
         public const long TamanoMaximoBytes = 5 * 1024 * 1024;
@@ -59,7 +56,6 @@ namespace ClinicaDental.Services
             };
         }
 
-        // Nombre apto para mostrar y para el encabezado de descarga: sin rutas, sin caracteres de control ni inválidos.
         private static string NombreSeguro(string nombreEnviado, string extension)
         {
             var nombre = Path.GetFileNameWithoutExtension(Path.GetFileName(nombreEnviado));

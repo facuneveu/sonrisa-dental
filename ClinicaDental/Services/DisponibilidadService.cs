@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Services
 {
-    // Reglas de agenda: qué horarios están libres y si un turno puede darse.
-    // Vive en un servicio (y no en el controlador) porque lo usan tanto el selector de horarios
-    // como la validación al guardar: así las dos cosas nunca pueden contradecirse.
     public class DisponibilidadService
     {
         public const int PasoMinutos = 15;
@@ -30,8 +27,6 @@ namespace ClinicaDental.Services
                 var desde = franja.HoraDesde.Hour * 60 + franja.HoraDesde.Minute;
                 var hasta = franja.HoraHasta.Hour * 60 + franja.HoraHasta.Minute;
 
-                // Se trabaja con minutos enteros (y no con TimeOnly.AddMinutes) porque TimeOnly
-                // "da la vuelta" pasada la medianoche y el bucle nunca terminaría.
                 for (var m = desde; m + duracionMin <= hasta; m += PasoMinutos)
                 {
                     var inicio = fecha.ToDateTime(new TimeOnly(m / 60, m % 60));
@@ -47,7 +42,6 @@ namespace ClinicaDental.Services
             return libres.Distinct().OrderBy(h => h).ToList();
         }
 
-        // Devuelve el motivo por el que NO se puede dar el turno, o null si se puede.
         public async Task<string?> ValidarAsync(int odontologoId, DateTime inicio, int duracionMin, int? ignorarTurnoId = null)
         {
             var fin = inicio.AddMinutes(duracionMin);
@@ -68,7 +62,6 @@ namespace ClinicaDental.Services
             return null;
         }
 
-        // ¿El paciente ya tiene otro turno (con cualquier odontólogo) que se pise con este?
         public async Task<bool> PacienteOcupadoAsync(int pacienteId, DateTime inicio, int duracionMin, int? ignorarTurnoId = null)
         {
             var fin = inicio.AddMinutes(duracionMin);

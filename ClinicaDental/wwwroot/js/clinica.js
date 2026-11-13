@@ -1,9 +1,5 @@
-// Comportamiento propio de los formularios clínicos (mensajes y archivos). Se engancha al modal de Crud con
-// `alAbrir: Clinica.alAbrir`, que se ejecuta cada vez que se dibuja un formulario dentro del modal.
 window.Clinica = (function () {
 
-    // ----- Mensajes: plantillas según el motivo -----
-    // Las claves son los valores del enum TipoMensaje (0 Demora, 1 Reprogramación, 2 Cancelación, 3 Indicaciones, 4 Otro).
     const plantillas = {
         '0': (n, t) => ({
             asunto: 'Demora en tu turno',
@@ -31,11 +27,10 @@ window.Clinica = (function () {
         const tipo = form.querySelector('#Tipo');
         const asunto = form.querySelector('#Asunto');
         const texto = form.querySelector('#Texto');
-        const paciente = form.querySelector('select#PacienteId');   // no existe si se abrió desde un turno
+        const paciente = form.querySelector('select#PacienteId');
         const turno = form.querySelector('select#TurnoId');
         const contador = form.querySelector('#contadorTexto');
 
-        // Si la persona ya escribió algo (o el formulario volvió con errores), la plantilla no lo pisa.
         let editadoAsunto = asunto.value.trim() !== '';
         let editadoTexto = texto.value.trim() !== '';
 
@@ -46,7 +41,6 @@ window.Clinica = (function () {
         function nombrePila() {
             if (form.dataset.nombre) return ' ' + form.dataset.nombre;
             if (paciente && paciente.selectedIndex > 0 && paciente.value !== '0') {
-                // Las opciones son "Apellido, Nombre"
                 const partes = paciente.selectedOptions[0].text.split(',');
                 return partes.length > 1 ? ' ' + partes[1].trim().split(' ')[0] : '';
             }
@@ -83,7 +77,6 @@ window.Clinica = (function () {
         cargarTurnos().then(aplicarPlantilla);
     }
 
-    // ----- Archivos: tamaño máximo y vista previa antes de subir -----
     function iniciarFormularioAdjunto(raiz) {
         const input = raiz.querySelector('#Archivo');
         if (!input || !input.dataset.maxMb) return;

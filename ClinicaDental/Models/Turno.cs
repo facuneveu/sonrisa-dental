@@ -20,8 +20,6 @@ namespace ClinicaDental.Models
         [Display(Name = "Fecha y hora")]
         public DateTime FechaHora { get; set; }
 
-        // Se copia del tratamiento al reservar: si después cambia la duración del tratamiento,
-        // los turnos ya dados no se corren ni se superponen.
         [Display(Name = "Duración (min)")]
         public int DuracionMinutos { get; set; }
 
@@ -39,7 +37,6 @@ namespace ClinicaDental.Models
 
         public DateTime FechaHoraFin => FechaHora.AddMinutes(DuracionMinutos);
 
-        // Un turno "ocupa" el horario mientras no esté cancelado.
         public bool OcupaHorario => Estado != EstadoTurno.Cancelado;
     }
 }

@@ -2,8 +2,6 @@ using System.Globalization;
 
 namespace ClinicaDental.Services
 {
-    // Formatos para mostrar. La app procesa formularios con cultura en-US (los <input type="number">
-    // envían "1500.50"), así que los formatos argentinos se piden de forma explícita acá.
     public static class Formato
     {
         private static readonly CultureInfo Ar = ObtenerCultura();
@@ -20,7 +18,6 @@ namespace ClinicaDental.Services
 
         public static string DiaYFecha(DateTime fecha) => $"{DiaSemana(fecha.DayOfWeek)} {Fecha(fecha)}";
 
-        // Nombre para mostrar de un enum: usa [Display(Name = "...")] si lo tiene (por ejemplo "Extracción indicada").
         public static string NombreEnum(Enum valor)
         {
             var campo = valor.GetType().GetField(valor.ToString());
@@ -29,8 +26,6 @@ namespace ClinicaDental.Services
             return display?.Name ?? valor.ToString();
         }
 
-        // Nombre de una pieza dental a partir de su número FDI: 38 -> "Tercer molar (muela del juicio) inferior izquierdo".
-        // El número es una identificación (cuadrante + posición), no una cantidad de piezas.
         private static readonly string[] PosicionesFdi =
         {
             "", "Incisivo central", "Incisivo lateral", "Canino", "Primer premolar", "Segundo premolar",
@@ -41,7 +36,6 @@ namespace ClinicaDental.Services
         public static string NombrePieza(int numero) =>
             Models.PiezaDental.EsNumeroFdiValido(numero) ? $"{PosicionesFdi[numero % 10]} {CuadrantesFdi[numero / 10]}" : $"Pieza {numero}";
 
-        // Nombre del cuadrante FDI (1 a 4), para los rótulos del odontograma.
         public static string NombreCuadrante(int cuadrante) => CuadrantesFdi[cuadrante];
 
         public static string TamanoArchivo(long bytes) =>
@@ -51,10 +45,8 @@ namespace ClinicaDental.Services
 
         public static string DiaCorto(DayOfWeek dia) => DiasCortos[(int)dia];
 
-        // Lunes primero (DayOfWeek arranca en domingo, que no es como se lee una agenda).
         public static int OrdenDia(DayOfWeek dia) => ((int)dia + 6) % 7;
 
-        // "Lun 09:00–13:00, 15:00–19:00 · Mié 09:00–13:00"
         public static string ResumenHorarios(IEnumerable<Models.HorarioAtencion> horarios)
         {
             var partes = horarios

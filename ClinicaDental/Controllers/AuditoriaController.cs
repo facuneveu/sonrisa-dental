@@ -6,8 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Controllers
 {
-    // Registro de quién hizo qué. Se completa solo desde ApplicationDbContext.SaveChanges;
-    // acá solo se consulta (no hay alta, edición ni baja: un registro de auditoría no se toca).
     [Authorize(Roles = Roles.Administrador)]
     public class AuditoriaController : Controller
     {
@@ -27,7 +25,7 @@ namespace ClinicaDental.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var texto = q.Trim();
-                if (texto.Length > 100) texto = texto[..100];   // un texto enorme no tiene sentido y rompe la consulta
+                if (texto.Length > 100) texto = texto[..100];
                 consulta = consulta.Where(l => l.UsuarioNombre.Contains(texto) || (l.Detalle != null && l.Detalle.Contains(texto)));
             }
 

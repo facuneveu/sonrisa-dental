@@ -9,11 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Controllers
 {
-    // Un mismo controlador para los tres roles, con alcance distinto:
-    //   Administrador -> ve y gestiona todos los turnos
-    //   Odontólogo    -> ve su agenda y cambia el estado de SUS turnos
-    //   Paciente      -> ve sus turnos, reserva y cancela los suyos
-    // El alcance se aplica siempre en el servidor (nunca confiando en lo que mande el navegador).
     [Authorize]
     public class TurnosController : Controller
     {
@@ -32,8 +27,6 @@ namespace ClinicaDental.Controllers
 
         private bool EsAdmin => User.IsInRole(Roles.Administrador);
 
-        // ------------------------------------------------------------------ Listado
-
         private async Task<List<Turno>> ListarAsync(DateOnly? desde, DateOnly? hasta, EstadoTurno? estado, int? odontologoId, int? pacienteId, string? q)
         {
             var consulta = _context.Turnos.AsNoTracking()
@@ -43,7 +36,6 @@ namespace ClinicaDental.Controllers
                 .Include(t => t.Tratamiento)
                 .AsQueryable();
 
-            // Alcance según el rol
             if (User.IsInRole(Roles.Odontologo) && !EsAdmin)
             {
                 var id = await _perfil.ObtenerOdontologoIdAsync();
@@ -56,7 +48,6 @@ namespace ClinicaDental.Controllers
             }
             else if (EsAdmin)
             {
-                // Los filtros por persona solo los usa la administración (los demás roles ya están acotados a lo suyo).
                 if (odontologoId is > 0) consulta = consulta.Where(t => t.OdontologoId == odontologoId);
                 if (pacienteId is > 0) consulta = consulta.Where(t => t.PacienteId == pacienteId);
             }
@@ -68,19 +59,16 @@ namespace ClinicaDental.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var texto = q.Trim();
-                if (texto.Length > 100) texto = texto[..100];   // un texto enorme no tiene sentido y rompe la consulta
+                if (texto.Length > 100) texto = texto[..100];
                 consulta = consulta.Where(t => t.Paciente!.Usuario!.Nombre.Contains(texto) || t.Paciente.Usuario.Apellido.Contains(texto)
                                                || t.Odontologo!.Usuario!.Apellido.Contains(texto) || t.Tratamiento!.Nombre.Contains(texto)
                                                || (t.Motivo != null && t.Motivo.Contains(texto)));
             }
 
-            // Mirando hacia adelante, el más próximo primero; mirando el historial, el más reciente primero.
             return await (desde.HasValue ? consulta.OrderBy(t => t.FechaHora) : consulta.OrderByDescending(t => t.FechaHora))
                 .Take(300).ToListAsync();
         }
 
-        // Los parámetros permiten llegar desde otras pantallas con la lista ya filtrada
-        // (por ejemplo, los números del inicio o "ver turnos" de un paciente) o con el formulario de reserva abierto.
         public async Task<IActionResult> Index(string? periodo, EstadoTurno? estado, int? odontologoId, int? pacienteId,
             bool nuevo = false, int tratamientoId = 0, int profesionalId = 0)
         {
@@ -115,7 +103,6 @@ namespace ClinicaDental.Controllers
             return View(await ListarAsync(desde, hasta, estado, odontologoFiltro, pacienteFiltro, null));
         }
 
-        // "proximos" (por defecto) | "hoy" | "semana" | "historial" | "todos"
         private static (DateOnly? Desde, DateOnly? Hasta) Periodo(string? periodo, DateOnly hoy) => periodo switch
         {
             "hoy" => (hoy, hoy),
@@ -129,8 +116,6 @@ namespace ClinicaDental.Controllers
         public async Task<IActionResult> ListarPartial(DateOnly? desde, DateOnly? hasta, EstadoTurno? estado, int? odontologoId, int? pacienteId, string? q) =>
             PartialView("_TablaTurnosPartial", await ListarAsync(desde, hasta, estado, odontologoId, pacienteId, q));
 
-        // ------------------------------------------------------------------ Alta / edición
-
         [HttpGet]
         [Authorize(Roles = AdminOPaciente)]
         public async Task<IActionResult> ObtenerFormulario(int id = 0, int tratamientoId = 0, int profesionalId = 0)
@@ -138,7 +123,6 @@ namespace ClinicaDental.Controllers
             if (id == 0)
             {
                 await CargarListasAsync();
-                // Precarga cuando se llega desde el catálogo o desde un profesional. Guardar() revalida todo igual.
                 return PartialView("_FormularioTurnoPartial", new TurnoFormViewModel
                 {
                     TratamientoId = Math.Max(tratamientoId, 0),
@@ -146,7 +130,6 @@ namespace ClinicaDental.Controllers
                 });
             }
 
-            // Editar un turno existente es solo de la administración.
             if (!EsAdmin) return Forbid();
 
             var turno = await _context.Turnos.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
@@ -182,7 +165,6 @@ namespace ClinicaDental.Controllers
                 if (turno == null) return Json(new { success = false, mensaje = "El turno no existe." });
             }
 
-            // ---- Paciente: la administración lo elige; un paciente solo puede reservar para sí mismo.
             int pacienteId;
             if (EsAdmin)
             {
@@ -197,7 +179,6 @@ namespace ClinicaDental.Controllers
                     return Json(new { success = false, mensaje = "Tu cuenta no tiene un perfil de paciente. Comunicate con la clínica." });
             }
 
-            // ---- Tratamiento y odontólogo
             var tratamiento = await _context.Tratamientos.AsNoTracking().FirstOrDefaultAsync(t => t.Id == vm.TratamientoId);
             if (tratamiento == null)
                 ModelState.AddModelError(nameof(vm.TratamientoId), "El tratamiento elegido no existe.");
@@ -216,7 +197,6 @@ namespace ClinicaDental.Controllers
                     ModelState.AddModelError(nameof(vm.OdontologoId), "Ese odontólogo no realiza el tratamiento elegido.");
             }
 
-            // ---- Fecha, hora y disponibilidad (solo si algo de eso cambió)
             if (ModelState.IsValid && tratamiento != null && odontologo != null)
             {
                 var inicio = vm.Fecha!.Value.ToDateTime(vm.Hora!.Value);
@@ -272,7 +252,6 @@ namespace ClinicaDental.Controllers
                     }
                     catch (DbUpdateException)
                     {
-                        // El índice único de la base frenó una doble reserva simultánea.
                         ModelState.AddModelError(nameof(vm.Hora), "Ese horario acaba de ser reservado por otra persona. Elegí otro.");
                     }
                 }
@@ -281,8 +260,6 @@ namespace ClinicaDental.Controllers
             await CargarListasAsync(turno?.TratamientoId);
             return PartialView("_FormularioTurnoPartial", vm);
         }
-
-        // ------------------------------------------------------------------ Cambios de estado
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -336,9 +313,6 @@ namespace ClinicaDental.Controllers
             return Json(new { success = true, mensaje = "Turno eliminado correctamente." });
         }
 
-        // ------------------------------------------------------------------ Datos para el formulario (AJAX)
-
-        // Al elegir un tratamiento: duración, precio y los odontólogos que lo realizan.
         [HttpGet]
         [Authorize(Roles = AdminOPaciente)]
         public async Task<IActionResult> OdontologosPorTratamiento(int tratamientoId)
@@ -355,7 +329,6 @@ namespace ClinicaDental.Controllers
             return Json(new { duracion = tratamiento.DuracionMinutos, precio = Formato.Moneda(tratamiento.Precio), odontologos });
         }
 
-        // Al elegir odontólogo y fecha: los horarios que realmente están libres.
         [HttpGet]
         [Authorize(Roles = AdminOPaciente)]
         public async Task<IActionResult> HorariosDisponibles(int odontologoId, int tratamientoId, DateOnly fecha, int turnoId = 0)
@@ -364,7 +337,6 @@ namespace ClinicaDental.Controllers
                 .Where(t => t.Id == tratamientoId).Select(t => (int?)t.DuracionMinutos).FirstOrDefaultAsync();
             if (duracion == null) return NotFound();
 
-            // Más allá de un año no se dan turnos (y una fecha absurda como 9999-12-31 desbordaba los cálculos de fechas).
             if (fecha > Reloj.Hoy.AddYears(1))
                 return Json(new { horarios = Array.Empty<string>() });
 
@@ -372,7 +344,6 @@ namespace ClinicaDental.Controllers
             return Json(new { horarios = libres.Select(h => h.ToString("HH:mm")) });
         }
 
-        // tratamientoActual: al editar, el tratamiento del turno tiene que seguir en la lista aunque ya no esté disponible.
         private async Task CargarListasAsync(int? tratamientoActual = null)
         {
             if (EsAdmin)
@@ -389,7 +360,6 @@ namespace ClinicaDental.Controllers
                 .Select(t => new { t.Id, t.Nombre, Especialidad = t.Especialidad!.Nombre })
                 .ToListAsync();
 
-            // Una sola instancia de grupo por especialidad: así el <select> arma un <optgroup> por especialidad.
             var grupos = tratamientos.Select(t => t.Especialidad).Distinct()
                 .ToDictionary(nombre => nombre, nombre => new SelectListGroup { Name = nombre });
 

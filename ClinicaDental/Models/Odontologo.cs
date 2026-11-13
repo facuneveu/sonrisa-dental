@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace ClinicaDental.Models
 {
-    // Perfil profesional. Nombre, DNI, email y teléfono se leen de la cuenta (Usuario).
     public class Odontologo : AuditableEntity
     {
         public int Id { get; set; }

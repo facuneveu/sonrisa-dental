@@ -40,7 +40,6 @@
 
 <partial name="_ModalCrud" />
 
-@* Modal aparte para los horarios de atención *@
 <div class="modal fade" id="modalHorarios" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content"></div>
@@ -60,7 +59,6 @@
         filtroTexto.addEventListener('input', conRetraso(Crud.refrescar));
         filtroEspecialidad.addEventListener('change', Crud.refrescar);
 
-        // ----- Horarios de atención -----
         const modalHorarios = new bootstrap.Modal(document.getElementById('modalHorarios'));
         const contenidoHorarios = document.querySelector('#modalHorarios .modal-content');
         let odontologoActual = null;
@@ -79,7 +77,7 @@
         function resultadoHorario(data, tituloError) {
             if (data.success) {
                 cargarHorarios();
-                Crud.refrescar();          // actualiza el resumen de horarios de la tabla
+                Crud.refrescar();
                 Crud.toast.fire({ icon: 'success', title: data.mensaje });
             } else {
                 Swal.fire(tituloError, data.mensaje, 'error');

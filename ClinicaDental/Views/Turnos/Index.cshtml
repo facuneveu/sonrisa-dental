@@ -5,7 +5,7 @@
     var esOdontologo = User.IsInRole(Roles.Odontologo) && !esAdmin;
     var esPaciente = User.IsInRole(Roles.Paciente) && !esAdmin;
     var puedeReservar = esAdmin || esPaciente;
-    var usaModal = puedeReservar || esOdontologo;   // el odontólogo abre historia clínica y mensajes en el modal
+    var usaModal = puedeReservar || esOdontologo;
 
     ViewData["Title"] = esAdmin ? "Turnos" : esOdontologo ? "Mi agenda" : "Mis turnos";
 
@@ -35,7 +35,6 @@
     }
 </div>
 
-@* Períodos rápidos: llenan las fechas de abajo con un clic. *@
 <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Período">
     <button type="button" class="btn btn-sm btn-outline-primary chip-periodo" data-periodo="proximos">Próximos</button>
     <button type="button" class="btn btn-sm btn-outline-primary chip-periodo" data-periodo="hoy">Hoy</button>
@@ -114,10 +113,10 @@
             desde: document.getElementById('filtroDesde'),
             hasta: document.getElementById('filtroHasta'),
             estado: document.getElementById('filtroEstado'),
-            odontologo: document.getElementById('filtroOdontologo'),   // solo administración
-            texto: document.getElementById('filtroTexto')              // no existe para pacientes
+            odontologo: document.getElementById('filtroOdontologo'),
+            texto: document.getElementById('filtroTexto')
         };
-        let pacienteFiltrado = '@(ViewBag.PacienteInicial?.ToString() ?? "")';   // solo administración
+        let pacienteFiltrado = '@(ViewBag.PacienteInicial?.ToString() ?? "")';
 
         Crud.init({
             modalId: 'modalCrud', tablaId: 'contenedorTabla', entidad: 'turno',
@@ -133,8 +132,6 @@
             })
         });
 
-        // ----- Períodos rápidos -----
-        // "Hoy" viene del servidor para usar la hora de la clínica y no la del navegador.
         const HOY = '@ViewBag.Hoy';
         const sumarDias = (iso, n) => {
             const d = new Date(iso + 'T12:00:00');
@@ -180,7 +177,6 @@
 
         marcarPeriodo();
 
-        // ----- Cambio de estado (odontólogo, administración y cancelación del paciente) -----
         const esOdontologo = @(esOdontologo ? "true" : "false");
 
         function cambiarEstado(id, estado, pregunta) {
@@ -201,7 +197,6 @@
             }).then(r => { if (r.isConfirmed) ejecutar(); });
         }
 
-        // Después de cambiar el estado, el odontólogo recibe el paso siguiente natural.
         function seguimientoDeEstado(turnoId, estado) {
             if (estado === 'Atendido') {
                 Swal.fire({
@@ -228,7 +223,6 @@
             }
         }
 
-        // ----- Formulario de reserva: tratamiento -> odontólogo -> fecha -> horarios libres -----
         function iniciarFormularioTurno(raiz) {
             const trat = raiz.querySelector('#TratamientoId');
             if (!trat) return;
@@ -256,7 +250,6 @@
                 r.odontologos.forEach(o => odo.add(opcion(o.nombre, o.id)));
                 if (!r.odontologos.length) info.textContent += ' · Por ahora no hay odontólogos con horarios para este tratamiento.';
                 if (preseleccion && preseleccion !== '0') odo.value = preseleccion;
-                // Si solo hay un odontólogo posible, no hace falta pedirle que lo elija.
                 else if (r.odontologos.length === 1) { odo.value = r.odontologos[0].id; cargarHorarios(); }
             }
 
@@ -279,12 +272,9 @@
             odo.addEventListener('change', () => cargarHorarios());
             fecha.addEventListener('change', () => cargarHorarios());
 
-            // Al editar, al volver el formulario con errores o al llegar desde otra pantalla con datos precargados,
-            // se reconstruyen las listas con lo ya elegido.
             if (!sinTratamiento()) cargarOdontologos(odoInicial).then(() => cargarHorarios(horaInicial));
         }
 
-        // Si se llegó desde otra pantalla ("Sacar turno" en un tratamiento o en un profesional), se abre la reserva directamente.
         const formularioInicial = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(urlFormularioInicial));
         if (formularioInicial) Crud.abrir(formularioInicial);
     </script>

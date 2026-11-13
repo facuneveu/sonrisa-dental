@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ClinicaDental.Models.ViewModels
 {
-    // Igual que el de odontólogo: combina la cuenta (Usuario) y el perfil (Paciente) en un solo formulario.
     public class PacienteFormViewModel
     {
         public int Id { get; set; }

@@ -9,9 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Controllers
 {
-    // Avisos del odontólogo al paciente ante cualquier inconveniente (demora, reprogramación, cancelación...).
-    //   Odontólogo -> envía, solo a pacientes con los que tiene turnos, y ve si fueron leídos
-    //   Paciente   -> recibe en su bandeja (no responde por acá: puede cancelar o sacar otro turno)
     [Authorize(Roles = Roles.OdontologoOPaciente)]
     public class MensajesController : Controller
     {
@@ -24,15 +21,12 @@ namespace ClinicaDental.Controllers
             _perfil = perfil;
         }
 
-        // ------------------------------------------------------------------ Bandeja
-
         public async Task<IActionResult> Index()
         {
             if (User.IsInRole(Roles.Paciente))
             {
                 var pacienteId = await _perfil.ObtenerPacienteIdAsync();
 
-                // Sin AsNoTracking: al abrir la bandeja los mensajes pasan a leídos.
                 var mensajes = await _context.Mensajes
                     .Include(m => m.Odontologo!).ThenInclude(o => o.Usuario)
                     .Include(m => m.Turno!).ThenInclude(t => t.Tratamiento)
@@ -40,7 +34,6 @@ namespace ClinicaDental.Controllers
                     .OrderByDescending(m => m.FechaEnvio).Take(100)
                     .ToListAsync();
 
-                // Los que llegaron sin leer se marcan como "nuevos" en esta vista y recién después se registran como leídos.
                 var nuevos = mensajes.Where(m => !m.Leido).Select(m => m.Id).ToHashSet();
                 ViewBag.Nuevos = nuevos;
 
@@ -72,16 +65,12 @@ namespace ClinicaDental.Controllers
                 .ToListAsync();
         }
 
-        // ------------------------------------------------------------------ Envío (odontólogo)
-
-        // pacienteId / turnoId llegan cuando se abre desde un turno, desde la ficha o al cancelar.
         [HttpGet]
         [Authorize(Roles = Roles.Odontologo)]
         public async Task<IActionResult> Formulario(int pacienteId = 0, int turnoId = 0, TipoMensaje tipo = TipoMensaje.Demora)
         {
             var miId = await _perfil.ObtenerOdontologoIdAsync();
 
-            // Si se abre desde un turno, el paciente sale del turno (y se valida que sea de este odontólogo).
             if (turnoId > 0)
             {
                 var turno = await CargarTurnoDelFormularioAsync(turnoId, miId);
@@ -98,7 +87,6 @@ namespace ClinicaDental.Controllers
             });
         }
 
-        // Turnos vigentes de un paciente con este odontólogo, para relacionar el aviso con uno de ellos.
         [HttpGet]
         [Authorize(Roles = Roles.Odontologo)]
         public async Task<IActionResult> TurnosDelPaciente(int pacienteId)
@@ -122,7 +110,6 @@ namespace ClinicaDental.Controllers
             var miId = await _perfil.ObtenerOdontologoIdAsync();
             if (miId == null) return Json(new { success = false, mensaje = "Tu cuenta no tiene un perfil de odontólogo." });
 
-            // Solo se le escribe a pacientes con los que se tiene (o se tuvo) un turno.
             Paciente? paciente = null;
             if (vm.PacienteId > 0 && await _perfil.PuedeAccederAFichaAsync(vm.PacienteId))
                 paciente = await _context.Pacientes.AsNoTracking().Include(p => p.Usuario).FirstOrDefaultAsync(p => p.Id == vm.PacienteId);
@@ -135,8 +122,6 @@ namespace ClinicaDental.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Si el turno es válido, el formulario vuelve "atado" a él; si no, vuelve al modo general
-                // (con la lista de pacientes y el error visible) para que se pueda corregir.
                 if (vm.TurnoId is { } turnoId && await CargarTurnoDelFormularioAsync(turnoId, miId) == null)
                     vm.TurnoId = null;
 
@@ -159,7 +144,6 @@ namespace ClinicaDental.Controllers
             return Json(new { success = true, mensaje = $"Mensaje enviado a {paciente!.Usuario!.NombreYApellido}." });
         }
 
-        // Carga en el ViewBag los textos que muestra el formulario cuando se abre sobre un turno.
         private async Task<Turno?> CargarTurnoDelFormularioAsync(int turnoId, int? odontologoId)
         {
             var turno = await _context.Turnos.AsNoTracking()

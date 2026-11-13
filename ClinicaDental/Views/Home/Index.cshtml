@@ -41,7 +41,6 @@
         @foreach (var i in Model.Indicadores)
         {
             <div class="col-6 col-lg">
-                @* Cada número lleva a la lista de la que sale *@
                 <a class="card indicador accion-card h-100 text-decoration-none d-block" href="@i.Url">
                     <span class="icono"><i class="bi @i.Icono"></i></span>
                     <div class="valor">@i.Valor</div>

@@ -76,7 +76,6 @@
                     }
                     @if (esOdontologo)
                     {
-                        @* Acciones clínicas: ficha del paciente, aviso por un inconveniente e historia clínica de la consulta *@
                         <a class="btn btn-sm btn-outline-secondary me-1" title="Ficha del paciente" aria-label="Ficha del paciente"
                            asp-controller="Ficha" asp-action="Detalle" asp-route-id="@item.PacienteId"><i class="bi bi-folder2-open"></i></a>
                         @if (item.Estado is EstadoTurno.Pendiente or EstadoTurno.Confirmado)

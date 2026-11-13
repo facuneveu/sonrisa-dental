@@ -11,13 +11,9 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Los hostings de contenedores (Render y similares) indican en qué puerto escuchar con la variable PORT.
-// Sin ella (desarrollo, IIS) se usa la configuración normal.
 if (Environment.GetEnvironmentVariable("PORT") is { Length: > 0 } puerto)
     builder.WebHost.UseUrls($"http://0.0.0.0:{puerto}");
 
-// En producción la cadena de conexión llega por variable de entorno (ConnectionStrings__DefaultConnection),
-// nunca escrita en el repositorio.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -25,15 +21,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// La cookie antifalsificación también debe ser Secure cuando la conexión (o el proxy del hosting) es HTTPS.
 builder.Services.AddAntiforgery(o => o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest);
 
-// Las cookies de sesión se firman con unas claves que, por defecto, se guardan en el disco del servidor. Si el
-// hosting borra el disco al reiniciar, todas las sesiones abiertas se pierden. Si la configuración indica una
-// carpeta que persiste (DataProtection__KeysPath), las claves se guardan ahí y las sesiones sobreviven al reinicio.
-// En un hosting compartido de Windows (IIS, como MonsterASP.NET) esto es obligatorio: sin perfil de usuario ni DPAPI las
-// claves quedan solo en memoria y el login falla o se cierra la sesión en cada reinicio. Una ruta relativa se toma desde
-// la carpeta de la aplicación: "..\private\keys" es la carpeta privada del sitio en MonsterASP.NET.
 var rutaClaves = builder.Configuration["DataProtection:KeysPath"];
 if (!string.IsNullOrWhiteSpace(rutaClaves))
 {
@@ -75,21 +64,16 @@ builder.Services.AddScoped<NombresUsuarioService>();
 builder.Services.AddScoped<MensajesService>();
 builder.Services.AddSingleton<ArchivoService>();
 
-// ----- Asistente de IA (Hito 4): chat flotante con Google Gemini -----
-// La clave (Gemini:ApiKey) no está en ningún archivo del repositorio: va en user-secrets o en la variable Gemini__ApiKey.
 builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection(GeminiOptions.Seccion));
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<GeminiClient>((sp, cliente) =>
 {
     var opciones = sp.GetRequiredService<IOptions<GeminiOptions>>().Value;
     cliente.BaseAddress = new Uri(opciones.BaseUrl.EndsWith('/') ? opciones.BaseUrl : opciones.BaseUrl + "/");
-    // Los tiempos de espera los maneja GeminiClient (total y por modelo), así que el HttpClient no corta por su cuenta.
     cliente.Timeout = Timeout.InfiniteTimeSpan;
 });
 builder.Services.AddScoped<AsistenteService>();
 
-// Tope de consultas al asistente: 8 por minuto y por persona (configurable con Asistente:ConsultasPorMinuto). La cuota
-// gratuita de la API es chica y compartida por todos los usuarios, así que nadie puede agotarla para el resto.
 var consultasPorMinuto = Math.Max(1, builder.Configuration.GetValue("Asistente:ConsultasPorMinuto", 8));
 builder.Services.AddRateLimiter(opciones =>
 {
@@ -152,7 +136,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Cabeceras básicas de seguridad para todas las respuestas (la ficha clínica es información sensible).
 app.Use(async (contexto, siguiente) =>
 {
     var cabeceras = contexto.Response.Headers;
@@ -176,9 +159,8 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter();   // después de la autenticación: así el tope del asistente se mide por persona
+app.UseRateLimiter();
 
-// Chequeo de salud para los hostings que lo piden (responde sin sesión y sin tocar la base de datos).
 app.MapGet("/healthz", () => Results.Text("ok"));
 
 app.MapControllerRoute(

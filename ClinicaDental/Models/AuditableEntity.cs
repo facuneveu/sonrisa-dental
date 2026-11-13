@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace ClinicaDental.Models
 {
-    // Base de las entidades auditadas: el DbContext completa estos campos en cada SaveChanges.
-    // [BindNever] evita que un formulario (o un request armado a mano) pueda falsificarlos.
     public abstract class AuditableEntity
     {
         [BindNever]

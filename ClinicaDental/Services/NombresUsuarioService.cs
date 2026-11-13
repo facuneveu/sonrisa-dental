@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Services
 {
-    // Traduce el Id guardado en "creado por / modificado por" al nombre de la persona.
-    // Carga todos los nombres en una sola consulta por request, en lugar de una consulta por fila.
     public class NombresUsuarioService
     {
         private readonly ApplicationDbContext _context;

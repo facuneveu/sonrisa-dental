@@ -2,18 +2,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ClinicaDental.Models.ViewModels
 {
-    // Una consulta ya registrada en la historia clínica.
     public record ConsultaItem(int Id, int TurnoId, DateTime Fecha, string Tratamiento, string Odontologo, bool EsMia,
         string Diagnostico, string? Procedimiento, string? Indicaciones, int Archivos);
 
-    // Un turno atendido al que todavía no se le cargó la historia clínica.
     public record ConsultaPendiente(int TurnoId, DateTime Fecha, string Tratamiento);
 
-    // Datos de un archivo SIN su contenido: las listas nunca cargan los bytes.
     public record AdjuntoResumen(int Id, TipoAdjunto Tipo, string Nombre, string TipoContenido, long TamanoBytes,
         string? Descripcion, int? HistoriaClinicaId, DateTime Fecha, string? SubidoPorId);
 
-    // Fila de "Mis pacientes" del odontólogo.
     public record PacienteDelOdontologo(int Id, string Nombre, int Edad, string ObraSocial, string? Alergias,
         int Turnos, DateTime? UltimaConsulta, DateTime? ProximoTurno);
 
@@ -22,7 +18,6 @@ namespace ClinicaDental.Models.ViewModels
         public Paciente Paciente { get; set; } = null!;
         public int Edad { get; set; }
 
-        // Solo el odontólogo modifica la ficha; el paciente la consulta.
         public bool PuedeEditar { get; set; }
 
         public List<ConsultaItem> Consultas { get; set; } = new();

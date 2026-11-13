@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Controllers
 {
-    // "Mi perfil": cada persona ve sus datos y cambia lo que le corresponde (contacto y contraseña).
     [Authorize]
     public class PerfilController : Controller
     {
@@ -40,7 +39,6 @@ namespace ClinicaDental.Controllers
             var paciente = User.IsInRole(Roles.Paciente)
                 ? await _context.Pacientes.FirstOrDefaultAsync(p => p.UsuarioId == usuario.Id) : null;
 
-            // Solo se puede elegir una obra social con convenio vigente (o conservar la que ya tenía).
             if (paciente != null && datos.ObraSocialId is { } osId && osId != paciente.ObraSocialId
                 && !await _context.ObrasSociales.AnyAsync(o => o.Id == osId && o.Activa))
                 ModelState.AddModelError("Datos.ObraSocialId", "La obra social elegida no es válida.");
@@ -57,7 +55,6 @@ namespace ClinicaDental.Controllers
                 paciente.Alergias = Limpiar(datos.Alergias);
             }
 
-            // UpdateAsync también guarda los cambios pendientes del perfil de paciente (mismo DbContext).
             var resultado = await _userManager.UpdateAsync(usuario);
             if (!resultado.Succeeded)
             {
@@ -81,7 +78,6 @@ namespace ClinicaDental.Controllers
                 var resultado = await _userManager.ChangePasswordAsync(usuario, clave.ClaveActual, clave.ClaveNueva);
                 if (resultado.Succeeded)
                 {
-                    // Cambiar la contraseña invalida la sesión; se renueva para que no tenga que volver a ingresar.
                     await _signInManager.RefreshSignInAsync(usuario);
                     TempData["Ok"] = "Tu contraseña se cambió correctamente.";
                     return RedirectToAction(nameof(Index));
@@ -95,7 +91,6 @@ namespace ClinicaDental.Controllers
                 }
             }
 
-            // Nunca se devuelven las contraseñas escritas al formulario.
             return View(nameof(Index), await ConstruirAsync(null, new CambiarClaveViewModel()));
         }
 
@@ -132,7 +127,6 @@ namespace ClinicaDental.Controllers
                     vm.Datos.Alergias = p.Alergias;
                 }
 
-                // Obras sociales con convenio vigente, más la actual aunque ya no lo tenga.
                 var actual = vm.Datos.ObraSocialId;
                 ViewBag.ObrasSociales = await _context.ObrasSociales.AsNoTracking()
                     .Where(o => o.Activa || o.Id == actual)
@@ -152,7 +146,6 @@ namespace ClinicaDental.Controllers
                 }
             }
 
-            // Si el formulario volvió con errores, se conserva lo que la persona había escrito.
             if (datos != null) vm.Datos = datos;
             if (clave != null) vm.Clave = clave;
             return vm;

@@ -45,7 +45,6 @@
                 @if (puedeReservar)
                 {
                     <td class="text-end text-nowrap">
-                        @* Atajo a la reserva con este tratamiento ya elegido *@
                         @if (item.Activo)
                         {
                             <a class="btn btn-sm btn-primary @(esAdmin ? "me-1" : "")" title="Sacar turno" aria-label="Sacar turno de @item.Nombre"

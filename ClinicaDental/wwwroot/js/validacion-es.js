@@ -1,4 +1,3 @@
-// Mensajes de jQuery Validation en español (los que no traen texto propio desde el servidor).
 (function ($) {
     if (!$ || !$.validator) return;
     $.extend($.validator.messages, {

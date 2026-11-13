@@ -1,6 +1,5 @@
 namespace ClinicaDental.Models
 {
-    // Nombres de rol en un solo lugar para no repetir strings en [Authorize] y en las vistas.
     public static class Roles
     {
         public const string Administrador = "Administrador";

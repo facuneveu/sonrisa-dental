@@ -8,8 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Controllers
 {
-    // El catálogo lo puede consultar cualquier usuario con sesión (los pacientes ven precios y duración);
-    // solo la administración puede modificarlo.
     [Authorize]
     public class TratamientosController : Controller
     {
@@ -27,7 +25,7 @@ namespace ClinicaDental.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var texto = q.Trim();
-                if (texto.Length > 100) texto = texto[..100];   // un texto enorme no tiene sentido y rompe la consulta
+                if (texto.Length > 100) texto = texto[..100];
                 consulta = consulta.Where(t => t.Nombre.Contains(texto) || (t.Descripcion != null && t.Descripcion.Contains(texto)));
             }
             if (especialidadId is > 0)

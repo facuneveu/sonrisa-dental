@@ -32,7 +32,6 @@
     <a class="side-link @Act("Tratamientos")" asp-area="" asp-controller="Tratamientos" asp-action="Index"><i class="bi bi-clipboard2-pulse"></i> Tratamientos</a>
     @if (!esAdmin)
     {
-        @* La administración ya gestiona a los odontólogos desde "Gestión". *@
         <a class="side-link @Act("Profesionales")" asp-area="" asp-controller="Profesionales" asp-action="Index"><i class="bi bi-person-badge"></i> Profesionales</a>
     }
     <a class="side-link @Act("Perfil")" asp-area="" asp-controller="Perfil" asp-action="Index"><i class="bi bi-person-circle"></i> Mi perfil</a>

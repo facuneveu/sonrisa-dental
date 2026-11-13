@@ -2,8 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ClinicaDental.Models.ViewModels
 {
-    // Lo que cada persona puede cambiar por su cuenta. Nombre, DNI y correo los cambia la administración
-    // (identifican a la persona en turnos e historia clínica), por eso no están acá.
     public class PerfilFormViewModel
     {
         [Phone(ErrorMessage = "Ingresá un teléfono válido.")]
@@ -11,7 +9,6 @@ namespace ClinicaDental.Models.ViewModels
         [Display(Name = "Teléfono")]
         public string? Telefono { get; set; }
 
-        // Solo se usan si la cuenta es de un paciente.
         [StringLength(150, ErrorMessage = "La dirección no puede superar los {1} caracteres.")]
         [Display(Name = "Dirección")]
         public string? Direccion { get; set; }
@@ -47,7 +44,6 @@ namespace ClinicaDental.Models.ViewModels
         public string ConfirmarClave { get; set; } = string.Empty;
     }
 
-    // Todo lo que muestra la pantalla "Mi perfil": datos de solo lectura + los dos formularios.
     public class PerfilViewModel
     {
         public string NombreCompleto { get; set; } = string.Empty;
@@ -58,12 +54,10 @@ namespace ClinicaDental.Models.ViewModels
         public bool EsPaciente { get; set; }
         public bool EsOdontologo { get; set; }
 
-        // Paciente
         public DateOnly? FechaNacimiento { get; set; }
         public string? ObraSocial { get; set; }
         public string? CoberturaObraSocial { get; set; }
 
-        // Odontólogo
         public string? Matricula { get; set; }
         public string? Especialidad { get; set; }
         public List<HorarioAtencion> Horarios { get; set; } = new();

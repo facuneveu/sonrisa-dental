@@ -1,7 +1,3 @@
-// CRUD asíncrono con modal de Bootstrap, fetch y SweetAlert2.
-// Uso: Crud.init({ modalId, tablaId, listarUrl, eliminarUrl, entidad, alAbrir });
-//      onclick="Crud.abrir(url)" | onsubmit="Crud.guardar(event)" | onclick="Crud.eliminar(id, nombre)"
-// listarUrl puede ser un string o una función que devuelva la URL (para respetar los filtros activos).
 window.Crud = (function () {
     let cfg, modal, contenido, tabla;
 
@@ -14,8 +10,6 @@ window.Crud = (function () {
         cfg = config;
         tabla = document.getElementById(cfg.tablaId);
 
-        // Las pantallas de solo lectura (catálogo para pacientes, agenda del odontólogo) no tienen modal de
-        // formulario: sin esta guarda, init() fallaba acá y nunca se enganchaban los filtros de la pantalla.
         const el = document.getElementById(cfg.modalId);
         if (el) {
             modal = new bootstrap.Modal(el);
@@ -27,8 +21,6 @@ window.Crud = (function () {
         return typeof cfg.listarUrl === 'function' ? cfg.listarUrl() : cfg.listarUrl;
     }
 
-    // Después de dibujar el formulario hay que volver a enganchar la validación de jQuery y
-    // avisar a la pantalla por si necesita inicializar algo propio (selectores dependientes, etc.).
     function alDibujarFormulario() {
         const form = contenido.querySelector('form');
         if (form && $.validator && $.validator.unobtrusive) {
@@ -81,7 +73,6 @@ window.Crud = (function () {
                         }
                     });
                 }
-                // Error de validación del servidor: se vuelve a dibujar el formulario con los errores
                 return res.text().then(html => { contenido.innerHTML = html; alDibujarFormulario(); });
             })
             .catch(() => {
@@ -107,7 +98,6 @@ window.Crud = (function () {
         });
     }
 
-    // POST genérico para acciones sobre una fila (cambiar estado, cancelar...). Devuelve JSON { success, mensaje }.
     function enviarAccion(url, id, tituloError, extra) {
         const fd = new FormData();
         fd.append('id', id);
@@ -132,7 +122,6 @@ window.Crud = (function () {
     return { init, abrir, guardar, eliminar, refrescar, enviarAccion, toast };
 })();
 
-// Utilidad común a los filtros de las tablas: espera a que el usuario deje de tipear antes de consultar.
 window.conRetraso = function (fn, ms) {
     let t;
     return function () { clearTimeout(t); t = setTimeout(fn, ms || 300); };

@@ -7,9 +7,6 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace ClinicaDental.Controllers
 {
-    // Endpoint del chat flotante. Solo para personas con sesión iniciada (cualquier rol): el asistente consume una cuota
-    // limitada de la API de IA, y dejarlo abierto a cualquiera permitiría agotarla. Además de eso, cada persona tiene un
-    // tope de consultas por minuto (política "asistente" en Program.cs).
     [Authorize]
     public class AsistenteController : Controller
     {
@@ -22,7 +19,6 @@ namespace ClinicaDental.Controllers
             _log = log;
         }
 
-        // El JSON viaja con el token antifalsificación en la cabecera RequestVerificationToken.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting("asistente")]
@@ -40,7 +36,6 @@ namespace ClinicaDental.Controllers
 
             var respuesta = await _asistente.PreguntarAsync(rol, vm.Mensajes.Select(m => new MensajeChat(m.Rol, m.Texto)), ct);
 
-            // No se guarda el contenido de las conversaciones: solo queda constancia de que se usó.
             _log.LogInformation("Asistente: consulta de {Rol} respondida con ok={Ok} (modelo {Modelo}).", rol, respuesta.Ok, respuesta.Modelo ?? "-");
 
             return Json(new { ok = respuesta.Ok, texto = respuesta.Texto });

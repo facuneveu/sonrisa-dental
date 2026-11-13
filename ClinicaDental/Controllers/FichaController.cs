@@ -9,11 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClinicaDental.Controllers
 {
-    // Ficha clínica de un paciente: consultas (historia clínica), odontograma y archivos.
-    //   Paciente   -> ve la suya (solo lectura)
-    //   Odontólogo -> ve y completa la de los pacientes con los que tiene turnos
-    //   Administración -> sin acceso (gestiona turnos y personas, no contenido clínico)
-    // Cada acción comprueba el acceso al paciente en el servidor; un id cambiado a mano en la URL no sirve.
     [Authorize(Roles = Roles.OdontologoOPaciente)]
     public class FichaController : Controller
     {
@@ -32,9 +27,6 @@ namespace ClinicaDental.Controllers
         private JsonResult Falla(string mensaje) => Json(new { success = false, mensaje });
         private static string? Limpiar(string? texto) => string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
 
-        // ------------------------------------------------------------------ Mis pacientes (odontólogo)
-
-        // El paciente no tiene listado: va directo a su propia ficha.
         public async Task<IActionResult> Index()
         {
             if (User.IsInRole(Roles.Paciente))
@@ -65,7 +57,7 @@ namespace ClinicaDental.Controllers
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var texto = q.Trim();
-                if (texto.Length > 100) texto = texto[..100];   // un texto enorme no tiene sentido y rompe la consulta
+                if (texto.Length > 100) texto = texto[..100];
                 consulta = consulta.Where(p => p.Usuario!.Nombre.Contains(texto) || p.Usuario.Apellido.Contains(texto) || p.Usuario.Dni.ToString().Contains(texto));
             }
             var pacientes = await consulta.OrderBy(p => p.Usuario!.Apellido).ThenBy(p => p.Usuario!.Nombre).ToListAsync();
@@ -84,8 +76,6 @@ namespace ClinicaDental.Controllers
         private static int Edad(DateOnly nacimiento, DateOnly hoy) =>
             hoy.Year - nacimiento.Year - (hoy < nacimiento.AddYears(hoy.Year - nacimiento.Year) ? 1 : 0);
 
-        // ------------------------------------------------------------------ Ficha
-
         public async Task<IActionResult> Detalle(int id)
         {
             if (!await _perfil.PuedeAccederAFichaAsync(id)) return Forbid();
@@ -94,7 +84,6 @@ namespace ClinicaDental.Controllers
             return vm == null ? NotFound() : View(vm);
         }
 
-        // Solo el contenido, para refrescar la ficha después de guardar sin recargar la página.
         [HttpGet]
         public async Task<IActionResult> ContenidoPartial(int id)
         {
@@ -141,7 +130,6 @@ namespace ClinicaDental.Controllers
             vm.Piezas = await _context.PiezasDentales.AsNoTracking()
                 .Where(p => p.PacienteId == pacienteId).ToDictionaryAsync(p => p.NumeroPieza);
 
-            // Sin cargar el contenido: solo los datos de cada archivo.
             vm.Adjuntos = await _context.Adjuntos.AsNoTracking()
                 .Where(a => a.PacienteId == pacienteId)
                 .OrderByDescending(a => a.FechaCreacion)
@@ -151,8 +139,6 @@ namespace ClinicaDental.Controllers
 
             return vm;
         }
-
-        // ------------------------------------------------------------------ Historia clínica (odontólogo)
 
         [HttpGet]
         [Authorize(Roles = Roles.Odontologo)]
@@ -190,7 +176,6 @@ namespace ClinicaDental.Controllers
                 return PartialView("_FormularioHistoriaPartial", modelo);
             }
 
-            // Se copian solo los campos editables: lo demás (turno, auditoría) no viene del formulario.
             var historia = await _context.HistoriasClinicas.FirstOrDefaultAsync(h => h.TurnoId == turno.Id);
             if (historia == null)
             {
@@ -204,8 +189,6 @@ namespace ClinicaDental.Controllers
             await _context.SaveChangesAsync();
             return Ok("Historia clínica guardada correctamente.");
         }
-
-        // ------------------------------------------------------------------ Odontograma (odontólogo)
 
         [HttpGet]
         [Authorize(Roles = Roles.Odontologo)]
@@ -238,7 +221,6 @@ namespace ClinicaDental.Controllers
                 .FirstOrDefaultAsync(p => p.PacienteId == vm.PacienteId && p.NumeroPieza == vm.NumeroPieza);
             var observaciones = Limpiar(vm.Observaciones);
 
-            // Una pieza sana y sin notas es el estado por defecto: no hace falta guardar una fila.
             if (vm.Estado == EstadoPieza.Sana && observaciones == null)
             {
                 if (existente != null) _context.PiezasDentales.Remove(existente);
@@ -259,8 +241,6 @@ namespace ClinicaDental.Controllers
             await _context.SaveChangesAsync();
             return Ok($"Pieza {vm.NumeroPieza} actualizada.");
         }
-
-        // ------------------------------------------------------------------ Archivos
 
         [HttpGet]
         [Authorize(Roles = Roles.Odontologo)]
@@ -322,7 +302,6 @@ namespace ClinicaDental.Controllers
             return Ok("Archivo eliminado correctamente.");
         }
 
-        // El archivo se sirve desde acá (nunca desde una carpeta pública) para poder comprobar quién lo pide.
         [HttpGet]
         public async Task<IActionResult> Archivo(int id, bool descargar = false)
         {
