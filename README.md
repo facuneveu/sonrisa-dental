@@ -6,7 +6,7 @@ Los pacientes se registran y reservan turnos eligiendo tratamiento, odontólogo 
 
 > Todos los datos de ejemplo son **ficticios**. No cargues datos reales de personas en este sistema.
 
-📐 Diagrama de entidad-relación: [`docs/DER.png`](docs/DER.png)
+ Diagrama de entidad-relación: [`docs/DER.png`](docs/DER.png)
 
 ## Modelo de datos
 
