@@ -6,10 +6,7 @@ Los pacientes se registran y reservan turnos eligiendo tratamiento, odontólogo 
 
 > Todos los datos de ejemplo son **ficticios**. No cargues datos reales de personas en este sistema.
 
-📐 Diseño y diagrama de entidad-relación: [`docs/Hito1-Propuesta-y-Diseno.md`](docs/Hito1-Propuesta-y-Diseno.md) · DER como imagen/PDF: [`docs/DER.html`](docs/DER.html) · [`docs/DER.png`](docs/DER.png)  
-📝 Explicación del DER (la base del modelo, las 16 relaciones y preguntas de defensa): [`docs/Explicacion-DER.docx`](docs/Explicacion-DER.docx)  
-🤖 Cómo funciona el asistente de IA y cómo defenderlo: [`docs/Hito4-Asistente-IA.md`](docs/Hito4-Asistente-IA.md)  
-🚀 Cómo publicarlo y entregarlo: [`docs/Despliegue.md`](docs/Despliegue.md)
+📐 Diagrama de entidad-relación: [`docs/DER.png`](docs/DER.png)
 
 ## Modelo de datos
 
@@ -133,7 +130,7 @@ ClinicaDental/
 ├── Areas/Identity/  páginas de inicio de sesión, registro y acceso denegado
 └── wwwroot/         CSS, JS (crud-async.js reutilizado por todas las pantallas; clinica.js para mensajes y archivos;
                      asistente.js para el chat flotante)
-docs/                diseño (DER en md, html y png, y su explicación en Word), asistente de IA y guía de despliegue
+docs/                diagrama de entidad-relación (DER.png)
 Dockerfile           imagen para hostings con contenedores
 ```
 
@@ -153,10 +150,10 @@ Dockerfile           imagen para hostings con contenedores
 
 - [x] **Hito 1** — Propuesta y diseño (DER y roles)
 - [x] **Hito 2** — Base de datos con EF Core, Identity, CRUD principales y auditoría
-- [x] **Hito 3** — Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, y preparación del despliegue (`Dockerfile`, `/healthz`, guía)
-- [x] **Publicación:** código en GitHub y sistema publicado en MonsterASP.NET (plan gratuito), con SQL Server (pasos en [`docs/Despliegue.md`](docs/Despliegue.md))
+- [x] **Hito 3** — Historia clínica, odontograma, archivos (radiografías y PDF), mensajes del odontólogo al paciente, y preparación del despliegue (`Dockerfile`, `/healthz`)
+- [x] **Publicación:** código en GitHub y sistema publicado en MonsterASP.NET (plan gratuito), con SQL Server
 - [x] **Hito 4 (código)** — Módulo de IA: chat flotante con Gemini, con el contexto armado desde la base. Probado con la API real de Google (12/11/2026) y con un Gemini simulado que falla a propósito
-- [ ] **Hito 4 (defensa)** — Ensayar la demo en vivo y las preguntas de código (ver [`docs/Hito4-Asistente-IA.md`](docs/Hito4-Asistente-IA.md))
+- [ ] **Hito 4 (defensa)** — Ensayar la demo en vivo y las preguntas de código
 
 **URL pública:** http://sonrisa-dental.runasp.net
 
